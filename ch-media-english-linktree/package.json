@@ -1,0 +1,32 @@
+{
+  "name": "dorms-linktree-template",
+  "version": "1.0.0",
+  "private": false,
+  "license": "MIT",
+  "author": "shinnanchanguk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shinnanchanguk/dorms-linktree-template.git"
+  },
+  "homepage": "https://github.com/shinnanchanguk/dorms-linktree-template#readme",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@paper-design/shaders-react": "^0.0.77",
+    "next": "^16.2.10",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "8.5.16"
+  }
+}
