@@ -67,5 +67,14 @@ export const cards: LinkCard[] = [
     description: "수업 전 미리 보는 플립러닝 영상 채널",
     href: "https://www.youtube.com/@nj3769",
     thumb: { kind: "icon", icon: "youtube" }
+  },
+  {
+    kind: "link",
+    id: "media-english-vocabs",
+    number: "02",
+    name: "Media English Vocabs",
+    description: "미디어영어 영단어 학습장",
+    href: "https://claude.ai/public/artifacts/2958041f-a305-4c92-b2a4-57f1edd4cf6f",
+    thumb: { kind: "icon", icon: "docs" }
   }
 ];
