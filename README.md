@@ -1,4 +1,4 @@
-# DoRms Linktree Template
+# Media English Linktree
 
 창현고 2학년 미디어영어 활동을 빠르게 모아 공개할 수 있는 링크트리 템플릿입니다.
 
