@@ -76,5 +76,14 @@ export const cards: LinkCard[] = [
     description: "미디어영어 영단어 학습장",
     href: "https://claude.ai/public/artifacts/2958041f-a305-4c92-b2a4-57f1edd4cf6f",
     thumb: { kind: "icon", icon: "docs" }
-  }
+  },
+  {
+    kind: "link",
+    id: "textbook-pdf",
+    number: "03",
+    name: "교과서 PDF",
+    description: "태블릿 필기용 교과서 PDF 모음",
+    href: "https://drive.google.com/drive/u/1/folders/15yDwaJFyu7kiO1TO27aoFz2m1kfuVaLN",
+    thumb: { kind: "icon", icon: "docs" }
+  }  
 ];
