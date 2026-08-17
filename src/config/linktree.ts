@@ -84,6 +84,6 @@ export const cards: LinkCard[] = [
     name: "교과서 PDF",
     description: "태블릿 필기용 교과서 PDF 모음",
     href: "https://drive.google.com/drive/u/1/folders/15yDwaJFyu7kiO1TO27aoFz2m1kfuVaLN",
-    thumb: { kind: "icon", icon: "docs" }
+    thumb: { kind: "icon", icon: "manual" }
   }  
 ];
