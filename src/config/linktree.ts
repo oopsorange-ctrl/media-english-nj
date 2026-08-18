@@ -85,5 +85,14 @@ export const cards: LinkCard[] = [
     description: "태블릿 필기용 교과서 PDF 모음",
     href: "https://drive.google.com/drive/u/1/folders/15yDwaJFyu7kiO1TO27aoFz2m1kfuVaLN",
     thumb: { kind: "icon", icon: "manual" }
+  },
+  {
+    kind: "link",
+    id: "attendance-system",
+    number: "04",
+    name: "출석 시스템",
+    description: "이동수업 반별 출석 체크",
+    href: "여기에 게시된 아티팩트 URL",
+    thumb: { kind: "icon", icon: "school" }
   }  
 ];
