@@ -92,7 +92,7 @@ export const cards: LinkCard[] = [
     number: "04",
     name: "출석 시스템",
     description: "이동수업 반별 출석 체크",
-    href: "여기에 게시된 아티팩트 URL",
+    href: "https://claude.ai/public/artifacts/8e32a065-0a22-493f-904e-41f76d3df702",
     thumb: { kind: "icon", icon: "school" }
   }  
 ];
