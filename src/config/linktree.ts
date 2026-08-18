@@ -92,7 +92,7 @@ export const cards: LinkCard[] = [
     number: "04",
     name: "출석 시스템",
     description: "이동수업 반별 출석 체크",
-    href: "https://claude.ai/public/artifacts/8e32a065-0a22-493f-904e-41f76d3df702",
+    href: "https://claude.ai/public/artifacts/dc8ed4db-fc94-46bc-9513-cbf2edf77801",
     thumb: { kind: "icon", icon: "school" }
   }  
 ];
