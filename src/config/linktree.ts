@@ -79,6 +79,15 @@ export const cards: LinkCard[] = [
   },
   {
     kind: "link",
+    id: "word-tug-of-war",
+    number: "03",
+    name: "Word-tug of War(게임)",
+    description: "줄다리기로 즐기는 어휘 테스트 게임",
+    href: "https://claude.ai/public/artifacts/5d86e887-ba60-490a-afc9-eb3bca63a203",
+    thumb: { kind: "icon", icon: "game" }
+  },
+  {
+    kind: "link",
     id: "textbook-pdf",
     number: "03",
     name: "교과서 PDF",
