@@ -103,5 +103,21 @@ export const cards: LinkCard[] = [
     description: "이동수업 반별 출석 체크",
     href: "https://claude.ai/public/artifacts/dc8ed4db-fc94-46bc-9513-cbf2edf77801",
     thumb: { kind: "icon", icon: "school" }
-  }  
+  },
+   {
+    kind: "group",
+    id: "arcade",
+    number: "05",
+    name: "오락실",
+    description: "nj가 만든 미니게임 모음",
+    thumb: { kind: "icon", icon: "game" },
+    items: [
+      {
+        name: "포트리스 미니",
+        description: "클래식 포트리스 스타일 미니게임",
+        href: "https://fortress-mini.onrender.com/",
+        thumb: { kind: "icon", icon: "game" }
+      }
+    ]
+  }
 ];
