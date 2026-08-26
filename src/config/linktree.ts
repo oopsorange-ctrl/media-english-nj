@@ -104,7 +104,16 @@ export const cards: LinkCard[] = [
     href: "https://claude.ai/public/artifacts/c9e4b708-d1b2-48a1-8e74-bb8c0ad31dcc",
     thumb: { kind: "icon", icon: "school" }
   },
-   {
+  {
+    kind: "link",
+    id: "golden-bell",
+    number: "0X",
+    name: "도전 골든벨",
+    description: "챕터 복습 골든벨 게임",
+    href: "https://claude.ai/public/artifacts/f0901351-797d-43b7-8143-1e5b9a7319be",
+    thumb: { kind: "icon", icon: "game" }
+  },
+  {
     kind: "group",
     id: "arcade",
     number: "05",
