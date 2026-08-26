@@ -13,7 +13,8 @@ export type IconName =
   | "magazine"
   | "code"
   | "game"
-  | "youtube";
+  | "youtube"
+  | "bell";
 
 export type Thumb =
   | { kind: "image"; src: string; alt: string }
