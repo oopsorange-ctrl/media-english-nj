@@ -90,7 +90,7 @@ export const cards: LinkCard[] = [
   {
     kind: "link",
     id: "textbook-pdf",
-    number: "03",
+    number: "04",
     name: "교과서 PDF",
     description: "태블릿 필기용 교과서 PDF 모음",
     href: "https://drive.google.com/drive/u/1/folders/15yDwaJFyu7kiO1TO27aoFz2m1kfuVaLN",
@@ -99,7 +99,7 @@ export const cards: LinkCard[] = [
   {
     kind: "link",
     id: "attendance-system",
-    number: "04",
+    number: "05",
     name: "출석 시스템",
     description: "이동수업 반별 출석 체크",
     href: "https://claude.ai/public/artifacts/c9e4b708-d1b2-48a1-8e74-bb8c0ad31dcc",
@@ -108,7 +108,7 @@ export const cards: LinkCard[] = [
   {
     kind: "link",
     id: "golden-bell",
-    number: "0X",
+    number: "06",
     name: "도전 골든벨",
     description: "챕터 복습 골든벨 게임",
     href: ""https://media-english-nj.vercel.app/golden_bell_firebase.html",
@@ -117,7 +117,7 @@ export const cards: LinkCard[] = [
   {
     kind: "group",
     id: "arcade",
-    number: "05",
+    number: "07",
     name: "오락실",
     description: "nj가 만든 미니게임 모음",
     thumb: { kind: "icon", icon: "game" },
