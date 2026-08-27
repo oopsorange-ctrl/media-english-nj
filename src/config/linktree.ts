@@ -111,7 +111,7 @@ export const cards: LinkCard[] = [
     number: "06",
     name: "도전 골든벨",
     description: "챕터 복습 골든벨 게임",
-    href: ""https://media-english-nj.vercel.app/golden_bell_firebase.html",
+    href: "https://media-english-nj.vercel.app/golden_bell_firebase.html",
     thumb: { kind: "icon", icon: "bell" }
   },
   {
