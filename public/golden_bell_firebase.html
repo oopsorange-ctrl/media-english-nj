@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>도전 골든벨 · Be Media Wise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --navy-deep:#0A0F2C; --navy:#101841; --navy-light:#1B2456;
+    --gold:#F4C430; --gold-soft:#FFE9A6; --crimson:#E63946;
+    --green:#3DDC97; --ivory:#F4F1E6; --slate:#8A93C0;
+    --line: rgba(244,196,48,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(244,196,48,0.14), transparent 60%),
+      radial-gradient(ellipse 700px 400px at 90% 10%, rgba(230,57,70,0.10), transparent 60%),
+      var(--navy-deep);
+    color:var(--ivory); font-family:'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  #app{ max-width:1100px; margin:0 auto; padding:32px 20px 60px; min-height:100vh; }
+  h1,h2,h3,p{ margin:0; }
+  button{ font-family:inherit; cursor:pointer; }
+  .center{ min-height:80vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+
+  .eyebrow{ font-size:12px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); font-weight:700; margin-bottom:10px; }
+  .title-lg{
+    font-family:'Black Han Sans', sans-serif; font-size:clamp(34px,6vw,58px); line-height:1.05;
+    background:linear-gradient(180deg, #FFF6D9 0%, var(--gold) 55%, #C99A1E 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:14px;
+  }
+  .sub{ color:var(--slate); font-size:15px; margin-bottom:28px; }
+
+  .bell-wrap{ position:relative; width:88px; height:88px; margin-bottom:18px; display:flex; align-items:center; justify-content:center; }
+  .bell-ring{ position:absolute; inset:0; border-radius:50%; border:2px solid var(--gold); opacity:0; animation: ring 2.6s ease-out infinite; }
+  .bell-ring:nth-child(2){ animation-delay:0.9s; } .bell-ring:nth-child(3){ animation-delay:1.8s; }
+  @keyframes ring{ 0%{transform:scale(.6);opacity:.7;} 100%{transform:scale(1.6);opacity:0;} }
+  .bell-icon{ font-size:40px; position:relative; z-index:2; filter: drop-shadow(0 0 14px rgba(244,196,48,.65)); }
+
+  .role-row{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  .role-btn{
+    background:var(--navy); border:1px solid var(--line); color:var(--ivory);
+    padding:22px 30px; border-radius:16px; font-size:16px; font-weight:800; min-width:190px;
+    transition:.15s; display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .role-btn span.ico{ font-size:30px; }
+  .role-btn:hover{ border-color:var(--gold); transform:translateY(-2px); }
+
+  input[type=text], input[type=number], input[type=password], textarea, select{
+    background:var(--navy-light); border:1px solid rgba(255,255,255,.12); color:var(--ivory);
+    padding:12px 14px; border-radius:10px; font-size:15px; font-family:inherit; width:100%;
+  }
+  input[type=text]:focus, textarea:focus, select:focus, input[type=password]:focus{ outline:2px solid var(--gold); }
+  .center input[type=text], .center input[type=password]{ width:280px; max-width:80vw; text-align:center; }
+  textarea{ resize:vertical; min-height:60px; }
+
+  .primary-btn{
+    background:linear-gradient(160deg, var(--gold), #C99A1E); color:var(--navy-deep);
+    border:none; padding:14px 28px; border-radius:12px; font-weight:900; font-size:15px;
+    box-shadow:0 6px 18px rgba(244,196,48,.25); margin-top:14px;
+  }
+  .primary-btn:hover{ filter:brightness(1.06); }
+  .primary-btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .ghost-btn{
+    background:transparent; border:1px solid var(--line); color:var(--gold-soft);
+    padding:10px 18px; border-radius:10px; font-size:13px; font-weight:700; margin-top:10px;
+  }
+  .danger-btn{
+    background:rgba(230,57,70,.12); border:1px solid var(--crimson); color:#FF8A94;
+    padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:700;
+  }
+  .small-btn{
+    background:var(--navy-light); border:1px solid rgba(255,255,255,.1); color:var(--ivory);
+    padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:700;
+  }
+
+  .name-chip{
+    background:rgba(244,196,48,.08); border:1px solid var(--line); color:var(--gold-soft);
+    padding:6px 14px; border-radius:999px; font-size:13.5px; font-weight:700;
+  }
+  .chip-wrap{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:640px; margin-top:22px; }
+
+  .room-code-card{
+    background:rgba(244,196,48,.08); border:1px solid var(--gold); border-radius:16px;
+    padding:18px 34px; margin-bottom:10px; display:inline-block;
+  }
+  .room-code-card .lbl{ font-size:12px; letter-spacing:.1em; color:var(--gold-soft); text-transform:uppercase; margin-bottom:6px; }
+  .room-code-card .code{ font-family:'Black Han Sans',sans-serif; font-size:44px; color:var(--gold); letter-spacing:0.15em; }
+  .bookmark-hint{
+    font-size:12px; color:var(--slate); background:var(--navy); border:1px solid rgba(255,255,255,.08);
+    border-radius:8px; padding:8px 14px; margin-top:16px; word-break:break-all; max-width:480px;
+  }
+
+  .stage-grid{ display:grid; grid-template-columns:1fr; gap:24px; }
+  .stage-grid.with-sidebar{ grid-template-columns: 1fr 260px; }
+  @media (max-width:760px){ .stage-grid.with-sidebar{ grid-template-columns:1fr; } }
+
+  .qpanel{ background:var(--navy); border:1px solid rgba(255,255,255,.06); border-radius:20px; padding:32px; }
+  .round-tag{ display:inline-block; background:rgba(244,196,48,.1); color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.05em; padding:5px 12px; border-radius:999px; margin-bottom:14px; }
+  .qtext-big{ font-size:22px; font-weight:800; line-height:1.5; margin-bottom:20px; }
+  .quote-block{ background:rgba(255,255,255,.04); border-left:3px solid var(--crimson); padding:14px 18px; border-radius:8px; font-size:17px; line-height:1.6; margin:0 0 20px; }
+
+  .opt-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  .opt-grid.ox{ grid-template-columns:repeat(2,1fr); max-width:360px; }
+  .opt-btn{
+    background:var(--navy-light); border:2px solid rgba(255,255,255,.08); color:var(--ivory);
+    padding:18px 16px; border-radius:12px; font-size:16px; font-weight:700; text-align:left;
+    display:flex; gap:10px; align-items:center; transition:.12s;
+  }
+  .opt-btn .num{ color:var(--gold); font-family:'Black Han Sans',sans-serif; font-size:15px; }
+  .opt-btn.disabled{ opacity:.55; pointer-events:none; }
+  .opt-btn.selected{ border-color:var(--gold); background:rgba(244,196,48,.1); }
+  .opt-btn.correct-flash{ border-color:var(--gold); background:rgba(244,196,48,.18); box-shadow:0 0 22px rgba(244,196,48,.35); color:var(--gold-soft); }
+  .opt-btn.wrong-flash{ opacity:.35; }
+
+  .timer-wrap{ display:flex; align-items:center; gap:16px; margin:10px 0 22px; }
+  .timer-circle{
+    width:64px; height:64px; border-radius:50%; border:4px solid var(--gold);
+    display:flex; align-items:center; justify-content:center; font-family:'Black Han Sans',sans-serif;
+    font-size:24px; color:var(--gold-soft); flex-shrink:0;
+  }
+  .timer-circle.urgent{ border-color:var(--crimson); color:#FF8A94; animation:pulse 0.6s infinite; }
+  @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+
+  .answer-list{ margin-top:20px; }
+  .answer-list h4{ font-size:13px; color:var(--slate); letter-spacing:.05em; margin-bottom:10px; text-transform:uppercase; }
+  .correct-name{
+    display:inline-block; background:rgba(61,220,151,.12); border:1px solid var(--green); color:var(--green);
+    padding:6px 12px; border-radius:999px; font-size:13.5px; font-weight:700; margin:3px 4px 3px 0;
+  }
+  .empty-note{ color:var(--slate); font-size:13.5px; font-style:italic; }
+
+  .sidebar{ background:var(--navy); border:1px solid rgba(255,255,255,.06); border-radius:20px; padding:22px 18px; height:fit-content; }
+  .sidebar h3{ font-size:13px; letter-spacing:.08em; color:var(--gold); text-transform:uppercase; margin-bottom:16px; }
+  .rank-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+  .rank-row:last-child{ border-bottom:none; }
+  .rank-num{ font-family:'Black Han Sans',sans-serif; font-size:16px; color:var(--gold); width:22px; }
+  .rank-name{ flex:1; font-size:14px; font-weight:700; }
+  .rank-score{ font-size:13px; color:var(--gold-soft); font-weight:800; }
+
+  .footer-controls{ display:flex; justify-content:center; gap:14px; margin-top:26px; flex-wrap:wrap; }
+
+  .podium-row{ display:flex; align-items:flex-end; gap:18px; justify-content:center; margin:36px 0; }
+  .podium-card{ background:var(--navy); border:1px solid var(--line); border-radius:16px; padding:20px 22px; text-align:center; }
+  .podium-card.p1{ order:2; padding-top:34px; border-color:var(--gold); box-shadow:0 0 30px rgba(244,196,48,.3); }
+  .podium-card.p2{ order:1; } .podium-card.p3{ order:3; }
+  .medal{ font-size:34px; margin-bottom:8px; display:block; }
+  .podium-name{ font-size:16px; font-weight:900; margin-bottom:4px; }
+  .podium-score{ font-size:13px; color:var(--slate); }
+
+  .status-pill{ font-size:13px; color:var(--slate); margin-top:8px; }
+  .waiting-icon{ font-size:46px; margin-bottom:16px; }
+
+  .admin-wrap{ max-width:760px; margin:0 auto; }
+  .admin-topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:10px; }
+  .admin-card{ background:var(--navy); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:22px; margin-bottom:18px; }
+  .admin-card h3{ font-size:14px; color:var(--gold); letter-spacing:.03em; margin-bottom:16px; }
+  .field-row{ margin-bottom:14px; }
+  .field-row label{ display:block; font-size:12.5px; color:var(--slate); margin-bottom:6px; font-weight:700; }
+  .field-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .opt-edit-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .opt-edit-row input[type=radio]{ width:18px; height:18px; accent-color:var(--gold); flex-shrink:0; }
+  .qlist-item{ display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--navy-light); border-radius:10px; margin-bottom:8px; }
+  .qlist-item .meta{ flex:1; min-width:0; }
+  .qlist-item .meta .rd{ font-size:11px; color:var(--gold); font-weight:800; }
+  .qlist-item .meta .pr{ font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qlist-item .btns{ display:flex; gap:6px; flex-shrink:0; }
+  .type-badge{ font-size:10.5px; padding:3px 8px; border-radius:999px; font-weight:800; letter-spacing:.02em; }
+  .type-badge.mc{ background:rgba(244,196,48,.15); color:var(--gold-soft); }
+  .type-badge.ox{ background:rgba(61,220,151,.15); color:var(--green); }
+  .type-badge.short{ background:rgba(230,57,70,.15); color:#FF8A94; }
+
+  .join-form{ display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .conn-pill{ position:fixed; top:10px; right:14px; font-size:11px; padding:4px 10px; border-radius:999px; background:var(--navy); border:1px solid var(--line); color:var(--slate); z-index:99; }
+  .conn-pill.ok{ color:var(--green); border-color:var(--green); }
+  .conn-pill.bad{ color:#FF8A94; border-color:var(--crimson); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="conn-pill" id="connPill">연결 확인 중...</div>
+
+<script>
+/* ============================ FIREBASE INIT ============================ */
+/* 아래 값을 Firebase 콘솔 > 프로젝트 설정 > 일반 탭에서 복사한 값으로 바꿔주세요 */
+const firebaseConfig = {
+  apiKey: "AIzaSyCJL-MD-tkE4XAZXBTKsogcYBsEeL8CD-A",
+  authDomain: "media-english-goldenbell.firebaseapp.com",
+  databaseURL: "https://media-english-goldenbell-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "media-english-goldenbell",
+  storageBucket: "media-english-goldenbell.firebasestorage.app",
+  messagingSenderId: "517584684193",
+  appId: "1:517584684193:web:2450d889495c03f8335ce0",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref('.info/connected').on('value', snap => {
+  const pill = document.getElementById('connPill');
+  if(!pill) return;
+  if(snap.val() === true){ pill.textContent = '🟢 연결됨'; pill.className = 'conn-pill ok'; }
+  else{ pill.textContent = '🔴 연결 끊김'; pill.className = 'conn-pill bad'; }
+});
+
+/* ============================ DEFAULT QUESTION BANK ============================ */
+const DEFAULT_QUESTIONS = [
+  { id:"d1", round:"01 · 단어 뜻", type:"mc", points:10,
+    prompt:"(영어→한글) “credible”의 뜻으로 알맞은 것은?",
+    options:["편협한","믿을 만한","신뢰할 수 없는","정확한"], correct:1 },
+  { id:"d2", round:"01 · 단어 뜻", type:"mc", points:10,
+    prompt:"(영어→한글) “manipulate”의 뜻으로 알맞은 것은?",
+    options:["제작하다","홍보하다","조작하다","계산하다"], correct:2 },
+  { id:"d3", round:"01 · 단어 뜻", type:"mc", points:10,
+    prompt:"(한글→영어) “편협한”에 해당하는 영어 단어는?",
+    options:["abundant","credible","accessible","narrow-minded"], correct:3 },
+  { id:"d4", round:"01 · 단어 뜻", type:"mc", points:10,
+    prompt:"(한글→영어) “소비하다”에 해당하는 영어 단어는?",
+    options:["manipulate","consume","engage","expand"], correct:1 },
+
+  { id:"d5", round:"02 · OX", type:"ox", points:5,
+    prompt:"다음 해석이 맞으면 O, 틀리면 X",
+    quote:"\"A media-literate person can skillfully engage with a range of media in a variety of ways.\"\n해석: \"미디어 리터러시를 갖춘 사람은 한 가지 미디어에만 능숙하게 참여할 수 있다.\"",
+    options:["O","X"], correct:1 },
+  { id:"d6", round:"02 · OX", type:"ox", points:5,
+    prompt:"어법이 맞으면 O, 틀리면 X",
+    quote:"\"...especially in the digital age, which information is abundant and easily accessible...\"",
+    options:["O","X"], correct:1 },
+  { id:"d7", round:"02 · OX", type:"ox", points:5,
+    prompt:"다음 명대사 \"나는 신세계의 신이 된다.\"의 애니메이션 제목은 '데스노트'다.",
+    options:["O","X"], correct:0 },
+  { id:"d8", round:"02 · OX", type:"ox", points:5,
+    prompt:"어법이 맞으면 O, 틀리면 X",
+    quote:"\"Media literacy, however, expand this definition to include the ability to...\"",
+    options:["O","X"], correct:1 },
+
+  { id:"d9", round:"03 · 넌센스", type:"short", points:10,
+    prompt:"신하가 왕과 헤어질 때 하는 말은?", accepted:["바이킹"] },
+  { id:"d10", round:"03 · 넌센스", type:"short", points:10,
+    prompt:"다리미가 좋아하는 음식은?", accepted:["피자"] },
+
+  { id:"d11", round:"04 · 문법", type:"mc", points:15,
+    prompt:"“Now that”와 같은 의미로 쓰이는 접속사는?",
+    options:["Although","Because","Unless","Whereas"], correct:1 },
+
+  { id:"d12", round:"05 · 문장 순서", type:"mc", points:20,
+    prompt:"다음 중 본문(p.37) 문장의 올바른 순서는?",
+    quote:"① Have you ever stopped to think about how much media we consume on a daily basis?\n② In the history of the world, there has never been as much media available as there is now...\n③ Young people, in particular, spend a large portion of their free time consuming media...\n④ Because of my job, I am well aware of the impact media has on our lives.",
+    options:["①-②-③-④","②-①-③-④","①-③-②-④","④-①-②-③"], correct:0 },
+
+  { id:"d13", round:"06 · 일반상식", type:"mc", points:10,
+    prompt:"다음 중 로마 숫자 5와 10의 표시로 바른 것은?",
+    options:["IV, IX","V, X","L, C","D, M"], correct:1 },
+  { id:"d14", round:"06 · 일반상식", type:"mc", points:10,
+    prompt:"브라질의 수도는?",
+    options:["상파울루","리우데자네이루","브라질리아","부에노스아이레스"], correct:2 },
+
+  { id:"d15", round:"07 · 골든벨 추억", type:"mc", points:10,
+    prompt:"‘동해’의 올바른 한자 표기는?",
+    options:["同海","冬海","東海","銅海"], correct:2 },
+  { id:"d16", round:"07 · 골든벨 추억", type:"ox", points:10,
+    prompt:"NJ쌤은 답이 '스윙'인 문제를 '스퀴즈'라고 표기해 탈락했다.",
+    options:["O","X"], correct:0 },
+
+  { id:"d17", round:"08 · 본문 이해", type:"ox", points:15,
+    prompt:"미디어 리터러시를 갖춘 사람은 미디어를 소비하기만 하면 된다.",
+    options:["O","X"], correct:1 },
+  { id:"d18", round:"08 · 본문 이해", type:"mc", points:15,
+    prompt:"According to the passage, what should we do to avoid a \"media bubble\"?",
+    options:["Only follow accounts we already agree with","Actively seek out different points of view","Avoid using digital media completely","Trust every media message without question"], correct:1 },
+
+  { id:"d19", round:"09 · 파이널", type:"mc", points:30,
+    prompt:"1년 중 밤이 제일 긴 날은?",
+    options:["춘분","하지","추분","동지"], correct:3 },
+  { id:"d20", round:"09 · 파이널", type:"short", points:30,
+    prompt:"NJ쌤의 MBTI는?", accepted:["intj"] },
+];
+const TOP7_FROM_INDEX = 2;
+const ADMIN_PW = "0409";
+
+/* ============================ AUDIO ============================ */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, startTime, gainLevel, duration, type){
+  if(!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, startTime);
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.linearRampToValueAtTime(gainLevel, startTime + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(startTime); osc.stop(startTime + duration + 0.02);
+}
+function playTick(){ ensureAudio(); if(!audioCtx) return; playTone(1500, audioCtx.currentTime, 0.12, 0.07, 'square'); }
+function playDing(){
+  ensureAudio(); if(!audioCtx) return;
+  const t = audioCtx.currentTime;
+  playTone(880, t, 0.22, 0.22, 'sine');
+  playTone(659.25, t + 0.2, 0.22, 0.4, 'sine');
+}
+
+/* ============================ FIREBASE HELPERS ============================ */
+function fGet(path){ return db.ref(path).once('value').then(s => s.exists() ? s.val() : null); }
+function fSet(path, value){ return db.ref(path).set(value); }
+function fRemoveListener(ref){ if(ref) ref.off(); }
+function sanitizeKey(n){ return String(n).trim().replace(/[^a-zA-Z0-9가-힣]/g,'_').slice(0,40); }
+function normalizeAnswer(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,''); }
+function genId(){ return 'q_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+async function loadQuestions(tCode){
+  const bank = await fGet('banks/' + sanitizeKey(tCode));
+  if(bank && Array.isArray(bank) && bank.length > 0) return bank;
+  if(bank && typeof bank === 'object'){
+    const arr = Object.values(bank);
+    if(arr.length > 0) return arr;
+  }
+  return DEFAULT_QUESTIONS;
+}
+async function saveBank(tCode, arr){ await fSet('banks/' + sanitizeKey(tCode), arr); }
+
+async function genRoomCode(){
+  for(let i=0;i<5;i++){
+    const code = String(Math.floor(1000 + Math.random()*9000));
+    const exists = await fGet('rooms/' + code + '/state');
+    if(!exists) return code;
+  }
+  return String(Math.floor(1000 + Math.random()*9000));
+}
+
+/* ============================ URL PARAM HELPERS ============================ */
+function getUrlParam(name){
+  try{ return new URLSearchParams(window.location.search).get(name); }catch(e){ return null; }
+}
+function setUrlParam(name, value){
+  try{
+    const url = new URL(window.location.href);
+    url.searchParams.set(name, value);
+    window.history.replaceState(null, '', url.toString());
+  }catch(e){}
+}
+
+/* ============================ APP STATE ============================ */
+let role = null;
+let teacherCode = null;
+let currentRoom = null;
+let myName = null;
+let mySubmittedIdx = null;
+let mySubmittedText = null;
+let ACTIVE_QUESTIONS = DEFAULT_QUESTIONS;
+
+let studentLoopHandle = null;
+let studentLoopQIndex = null;
+let lastKnownPhase = null;
+let stateListenerRef = null;
+let studentsListenerRef = null;
+
+let hostScores = {};
+let scoredQuestions = new Set();
+let countdownTickHandle = null;
+
+const app = document.getElementById('app');
+
+/* ============================ INIT ============================ */
+renderRoleSelect();
+
+function cleanupListeners(){
+  fRemoveListener(stateListenerRef); stateListenerRef = null;
+  fRemoveListener(studentsListenerRef); studentsListenerRef = null;
+  if(studentLoopHandle){ clearInterval(studentLoopHandle); studentLoopHandle = null; }
+  if(countdownTickHandle){ clearInterval(countdownTickHandle); countdownTickHandle = null; }
+}
+
+function renderRoleSelect(){
+  cleanupListeners();
+  app.innerHTML = `
+    <div class="center">
+      <div class="bell-wrap">
+        <div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-ring"></div>
+        <div class="bell-icon">🔔</div>
+      </div>
+      <p class="eyebrow">Challenge Golden Bell · Lesson 2</p>
+      <h1 class="title-lg">BE MEDIA WISE</h1>
+      <p class="sub">이 화면이 누구의 화면인지 선택하세요</p>
+      <div class="role-row">
+        <button class="role-btn" id="btnStudent"><span class="ico">🎓</span>학생으로 참가</button>
+        <button class="role-btn" id="btnHost"><span class="ico">🖥️</span>진행자 화면 (교사)</button>
+        <button class="role-btn" id="btnAdmin"><span class="ico">⚙️</span>문제 관리</button>
+      </div>
+      <p class="status-pill" style="margin-top:24px;max-width:420px;">로그인 없이 입장 코드 + 이름만으로 참가할 수 있어요.</p>
+    </div>`;
+  document.getElementById('btnStudent').onclick = () => { ensureAudio(); role='student'; renderStudentJoin(); };
+  document.getElementById('btnHost').onclick = () => { ensureAudio(); role='host'; goHostFlow(); };
+  document.getElementById('btnAdmin').onclick = () => { role='admin'; goAdminFlow(); };
+}
+
+/* ============================ TEACHER CODE ============================ */
+function renderTeacherCodeEntry(nextRole){
+  app.innerHTML = `
+    <div class="center">
+      <p class="eyebrow">교사 코드</p>
+      <h2 class="title-lg" style="font-size:32px;">본인만의 코드를 정해주세요</h2>
+      <p class="sub" style="max-width:360px;">이니셜처럼 짧게 정하면 돼요 (예: NJ). 이 코드로 나만의 문제은행이 따로 저장돼요.</p>
+      <input type="text" id="tcInput" placeholder="예: NJ" maxlength="12">
+      <div><button class="primary-btn" id="tcBtn">확인</button></div>
+      <button class="ghost-btn" id="backBtn">← 처음으로</button>
+    </div>`;
+  const input = document.getElementById('tcInput');
+  const go = () => {
+    const val = input.value.trim();
+    if(!val) return;
+    teacherCode = val;
+    setUrlParam('t', teacherCode);
+    if(nextRole === 'host') renderHostRoomSetup();
+    else renderAdminGate();
+  };
+  document.getElementById('tcBtn').onclick = go;
+  document.getElementById('backBtn').onclick = renderRoleSelect;
+  input.addEventListener('keydown', e => { if(e.key==='Enter') go(); });
+  input.focus();
+}
+function resolveTeacherCode(){
+  if(teacherCode) return teacherCode;
+  const urlT = getUrlParam('t');
+  if(urlT){ teacherCode = urlT; return teacherCode; }
+  return null;
+}
+function goHostFlow(){
+  const tc = resolveTeacherCode();
+  if(tc) renderHostRoomSetup(); else renderTeacherCodeEntry('host');
+}
+function goAdminFlow(){
+  const tc = resolveTeacherCode();
+  if(tc) renderAdminGate(); else renderTeacherCodeEntry('admin');
+}
+function bookmarkHint(){
+  return `<div class="bookmark-hint">🔖 이 주소를 즐겨찾기 해두면 다음부터 코드 입력 없이 바로 들어와요:<br>${escapeHtml(window.location.href)}</div>`;
+}
+
+/* ============================ HOST: ROOM SETUP ============================ */
+function renderHostRoomSetup(){
+  app.innerHTML = `
+    <div class="center">
+      <p class="eyebrow">진행자 화면 · 교사 코드 “${escapeHtml(teacherCode)}”</p>
+      <h1 class="title-lg" style="font-size:40px;">새 수업을 시작할까요?</h1>
+      <p class="sub">버튼을 누르면 4자리 입장 코드가 새로 생겨요. 반이 바뀔 때마다 다시 눌러서 새 코드를 만들면 이전 반 데이터와 완전히 분리돼요.</p>
+      <button class="primary-btn" id="genRoomBtn">🎲 새 수업 코드 생성</button>
+      ${bookmarkHint()}
+      <button class="ghost-btn" id="backBtn">← 처음으로</button>
+    </div>`;
+  document.getElementById('genRoomBtn').onclick = async () => {
+    const roomCode = await genRoomCode();
+    currentRoom = roomCode;
+    hostScores = {}; scoredQuestions = new Set();
+    ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
+    await fSet('rooms/' + roomCode + '/state', {phase:'lobby', qIndex:-1, teacherCode});
+    await fSet('rooms/' + roomCode + '/scores', {});
+    startHostListening();
+  };
+  document.getElementById('backBtn').onclick = renderRoleSelect;
+}
+
+/* ============================ STUDENT: JOIN ============================ */
+function renderStudentJoin(){
+  app.innerHTML = `
+    <div class="center">
+      <p class="eyebrow">학생 참가</p>
+      <h2 class="title-lg" style="font-size:32px;">입장 코드와 이름을 입력하세요</h2>
+      <div class="join-form">
+        <input type="text" id="roomInput" placeholder="입장 코드 4자리" maxlength="4" inputmode="numeric">
+        <input type="text" id="nameInput" placeholder="이름 (예: 김민준)" maxlength="10">
+        <button class="primary-btn" id="joinBtn" style="margin-top:0;">입장하기</button>
+      </div>
+      <p class="status-pill" id="joinErr" style="color:#FF8A94;"></p>
+      <button class="ghost-btn" id="backBtn">← 처음으로</button>
+    </div>`;
+  const roomInput = document.getElementById('roomInput');
+  const nameInput = document.getElementById('nameInput');
+  const go = async () => {
+    const rc = roomInput.value.trim();
+    const name = nameInput.value.trim();
+    const err = document.getElementById('joinErr');
+    if(!rc || !name){ err.textContent = '입장 코드와 이름을 모두 입력해주세요'; return; }
+    const state = await fGet('rooms/' + rc + '/state');
+    if(!state){ err.textContent = '입장 코드를 확인해주세요'; return; }
+    ensureAudio();
+    currentRoom = rc; myName = name; teacherCode = state.teacherCode;
+    await fSet('rooms/' + rc + '/students/' + sanitizeKey(name), {name, joinedAt: Date.now()});
+    ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
+    startStudentListening();
+  };
+  document.getElementById('joinBtn').onclick = go;
+  document.getElementById('backBtn').onclick = renderRoleSelect;
+  nameInput.addEventListener('keydown', e => { if(e.key==='Enter') go(); });
+}
+
+/* ============================ STUDENT: REAL-TIME GAME LOOP ============================ */
+function startStudentListening(){
+  renderStudentWaiting("입장 완료! 곧 시작합니다");
+  stateListenerRef = db.ref('rooms/' + currentRoom + '/state');
+  stateListenerRef.on('value', snap => {
+    const state = snap.exists() ? snap.val() : {phase:'lobby', qIndex:-1};
+    onStudentStateChange(state);
+  });
+}
+function onStudentStateChange(state){
+  if(state.phase !== 'countdown' && studentLoopHandle){
+    clearInterval(studentLoopHandle); studentLoopHandle = null; studentLoopQIndex = null;
+  }
+  if(state.phase === 'reveal' && lastKnownPhase !== 'reveal'){ playDing(); }
+  lastKnownPhase = state.phase;
+
+  if(state.phase === 'lobby'){
+    renderStudentWaiting("🎉 " + myName + "님 입장 완료! 곧 시작합니다");
+  } else if(state.phase === 'ready'){
+    mySubmittedIdx = null; mySubmittedText = null;
+    renderStudentQuestion(state, false, null);
+  } else if(state.phase === 'countdown'){
+    if(studentLoopQIndex !== state.qIndex){
+      studentLoopQIndex = state.qIndex;
+      runStudentCountdown(state.qIndex, state.countdownEndAt);
+    }
+  } else if(state.phase === 'reveal'){
+    renderStudentQuestion(state, false, null);
+  } else if(state.phase === 'final'){
+    renderStudentFinal();
+  }
+}
+function renderStudentWaiting(msg){
+  app.innerHTML = `
+    <div class="center">
+      <div class="waiting-icon">⏳</div>
+      <p class="sub" style="font-size:17px; color:var(--ivory); font-weight:700;">${escapeHtml(msg)}</p>
+      <p class="status-pill">입장 코드 ${escapeHtml(currentRoom)} · 참가자: ${escapeHtml(myName)}</p>
+    </div>`;
+}
+
+function renderOptionsBlock(q, opts){
+  const disabled = opts.disabled;
+  const revealMode = opts.reveal;
+  if(q.type === 'short'){
+    if(revealMode){
+      const correct = mySubmittedText !== null && q.accepted.map(normalizeAnswer).includes(normalizeAnswer(mySubmittedText));
+      return `<p class="status-pill" style="font-size:14px;">내가 쓴 답: <strong style="color:var(--ivory)">${mySubmittedText ? escapeHtml(mySubmittedText) : '(제출 안 함)'}</strong></p>
+        <p class="status-pill">${mySubmittedText===null ? '' : (correct ? '✅ 정답입니다!' : '❌ 아쉬워요')}</p>
+        <p class="status-pill">정답 예시: ${escapeHtml(q.accepted.join(', '))}</p>`;
+    }
+    return `
+      <div style="display:flex; gap:10px; max-width:420px;">
+        <input type="text" id="shortInput" placeholder="답을 입력하세요" ${disabled?'disabled':''} value="${mySubmittedText?escapeHtml(mySubmittedText):''}">
+        <button class="primary-btn" id="shortSubmit" style="margin-top:0;" ${disabled?'disabled':''}>제출</button>
+      </div>`;
+  }
+  let optsHtml = q.options.map((opt,i) => {
+    let cls = 'opt-btn';
+    if(mySubmittedIdx === i) cls += ' selected';
+    if(disabled) cls += ' disabled';
+    if(revealMode){
+      if(i===q.correct) cls += ' correct-flash';
+      else if(mySubmittedIdx===i) cls += ' wrong-flash';
+    }
+    return `<button class="${cls}" data-i="${i}"><span class="num">${i+1}</span>${escapeHtml(opt)}</button>`;
+  }).join('');
+  return `<div class="opt-grid ${q.type==='ox'?'ox':''}">${optsHtml}</div>`;
+}
+
+function renderStudentQuestion(state, isCountdown, remaining){
+  const q = ACTIVE_QUESTIONS[state.qIndex];
+  if(!q){ renderStudentWaiting("문제를 불러오는 중..."); return; }
+  const disabled = !isCountdown || (q.type==='short' ? mySubmittedText!==null : mySubmittedIdx !== null);
+
+  app.innerHTML = `
+    <div class="qpanel" style="max-width:600px;margin:20px auto;">
+      <span class="round-tag">${escapeHtml(q.round)}</span>
+      <p class="qtext-big">${escapeHtml(q.prompt)}</p>
+      ${q.quote ? `<div class="quote-block" style="white-space:pre-line;font-size:14px;">${escapeHtml(q.quote)}</div>` : ''}
+      ${isCountdown ? `<div class="timer-wrap"><div class="timer-circle ${remaining<=3?'urgent':''}">${remaining}</div><span class="status-pill">답을 선택하세요</span></div>` : ''}
+      ${renderOptionsBlock(q, {disabled, reveal: state.phase==='reveal'})}
+      ${!isCountdown && state.phase==='ready' ? `<p class="status-pill" style="margin-top:16px;">선생님이 타이머를 시작하면 답할 수 있어요</p>` : ''}
+    </div>`;
+
+  if(q.type === 'short'){
+    const btn = document.getElementById('shortSubmit');
+    if(btn){
+      btn.onclick = async () => {
+        const val = document.getElementById('shortInput').value.trim();
+        if(!val) return;
+        mySubmittedText = val;
+        await fSet('rooms/' + currentRoom + '/answers/' + state.qIndex + '/' + sanitizeKey(myName), {name: myName, text: val});
+        renderStudentQuestion(state, isCountdown, remaining);
+      };
+    }
+  } else if(isCountdown && mySubmittedIdx===null){
+    app.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const idx = parseInt(btn.dataset.i,10);
+        mySubmittedIdx = idx;
+        await fSet('rooms/' + currentRoom + '/answers/' + state.qIndex + '/' + sanitizeKey(myName), {name: myName, idx});
+        renderStudentQuestion(state, true, remaining);
+      };
+    });
+  }
+}
+
+function runStudentCountdown(qIndex, countdownEndAt){
+  let lastRemaining = null;
+  function tick(){
+    const remaining = Math.max(0, Math.ceil((countdownEndAt - Date.now())/1000));
+    if(remaining !== lastRemaining){ if(remaining>0) playTick(); lastRemaining = remaining; }
+    renderStudentQuestion({phase:'countdown', qIndex}, true, remaining);
+    if(remaining <= 0){
+      clearInterval(studentLoopHandle); studentLoopHandle = null;
+      renderStudentWaiting("채점 중이에요...");
+    }
+  }
+  tick();
+  clearInterval(studentLoopHandle);
+  studentLoopHandle = setInterval(tick, 250);
+}
+
+function renderStudentFinal(){
+  app.innerHTML = `
+    <div class="center">
+      <p class="eyebrow">Game Over</p>
+      <h2 class="title-lg" style="font-size:34px;">수고했어요, ${escapeHtml(myName)}!</h2>
+      <p class="sub">선생님 화면에서 최종 순위를 확인하세요 🔔</p>
+    </div>`;
+}
+
+/* ============================ HOST: REAL-TIME ============================ */
+let hostStudentsCache = [];
+
+function startHostListening(){
+  studentsListenerRef = db.ref('rooms/' + currentRoom + '/students');
+  studentsListenerRef.on('value', snap => {
+    hostStudentsCache = snap.exists() ? Object.values(snap.val()).sort((a,b)=>a.joinedAt-b.joinedAt) : [];
+    const stateNow = app.querySelector('[data-phase]');
+    if(stateNow && stateNow.dataset.phase === 'lobby') renderHostLobbyChips();
+  });
+  stateListenerRef = db.ref('rooms/' + currentRoom + '/state');
+  stateListenerRef.on('value', snap => {
+    const state = snap.exists() ? snap.val() : {phase:'lobby', qIndex:-1};
+    onHostStateChange(state);
+  });
+}
+
+function onHostStateChange(state){
+  if(state.phase === 'lobby') renderHostLobby();
+  else if(state.phase === 'ready') renderHostReady(state);
+  else if(state.phase === 'countdown') { /* local countdown loop already rendering */ }
+  else if(state.phase === 'reveal') renderHostReveal(state);
+  else if(state.phase === 'final') renderHostFinal();
+}
+
+function renderHostLobby(){
+  app.innerHTML = `
+    <div class="center" data-phase="lobby">
+      <div class="bell-wrap"><div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-icon">🔔</div></div>
+      <p class="eyebrow">Challenge Golden Bell · Lesson 2 · 교사 코드 ${escapeHtml(teacherCode)}</p>
+      <h1 class="title-lg">BE MEDIA WISE</h1>
+      <div class="room-code-card">
+        <div class="lbl">입장 코드</div>
+        <div class="code">${escapeHtml(currentRoom)}</div>
+      </div>
+      <p class="sub">학생들이 이 코드와 이름을 태블릿에 입력하면 실시간으로 여기에 나타나요</p>
+      <div class="chip-wrap" id="chipWrap"></div>
+      <button class="primary-btn" id="startBtn" style="margin-top:30px;">게임 시작 (<span id="studentCount">0</span>명 참가)</button>
+      <button class="ghost-btn" id="backBtn">← 처음으로 (다른 수업 코드 만들기)</button>
+    </div>`;
+  renderHostLobbyChips();
+  document.getElementById('startBtn').onclick = async () => {
+    ensureAudio();
+    hostScores = {}; scoredQuestions = new Set();
+    await fSet('rooms/' + currentRoom + '/state', {phase:'ready', qIndex:0, teacherCode});
+    await fSet('rooms/' + currentRoom + '/scores', {});
+  };
+  document.getElementById('backBtn').onclick = renderRoleSelect;
+}
+function renderHostLobbyChips(){
+  const wrap = document.getElementById('chipWrap');
+  const countEl = document.getElementById('studentCount');
+  if(!wrap) return;
+  wrap.innerHTML = hostStudentsCache.map(s => `<span class="name-chip">${escapeHtml(s.name)}</span>`).join('') || `<span class="empty-note">아직 참가자가 없어요</span>`;
+  if(countEl) countEl.textContent = hostStudentsCache.length;
+  const startBtn = document.getElementById('startBtn');
+  if(startBtn) startBtn.disabled = hostStudentsCache.length === 0;
+}
+
+function questionPanelHtml(q, extra){
+  return `
+    <div class="qpanel">
+      <span class="round-tag">${escapeHtml(q.round)}</span>
+      <p class="qtext-big">${escapeHtml(q.prompt)}</p>
+      ${q.quote ? `<div class="quote-block" style="white-space:pre-line;">${escapeHtml(q.quote)}</div>` : ''}
+      ${extra||''}
+    </div>`;
+}
+function hostOptsPreviewHtml(q){
+  if(q.type === 'short') return `<div class="quote-block" style="border-left-color:var(--gold);">✍️ 주관식 문제 — 학생이 직접 답을 입력합니다</div>`;
+  return `<div class="opt-grid ${q.type==='ox'?'ox':''}">${q.options.map((opt,i)=>`<div class="opt-btn disabled"><span class="num">${i+1}</span>${escapeHtml(opt)}</div>`).join('')}</div>`;
+}
+
+function renderHostReady(state){
+  const q = ACTIVE_QUESTIONS[state.qIndex];
+  const withSidebar = state.qIndex >= TOP7_FROM_INDEX;
+  app.innerHTML = `
+    <div data-phase="ready"></div>
+    <p class="sub" style="text-align:center;">Q${state.qIndex+1} / ${ACTIVE_QUESTIONS.length} · ${q.points}점 · 코드 ${escapeHtml(currentRoom)}</p>
+    <div class="stage-grid ${withSidebar?'with-sidebar':''}">
+      <div>
+        ${questionPanelHtml(q, `${hostOptsPreviewHtml(q)}
+          <div class="footer-controls"><button class="primary-btn" id="startTimerBtn">⏱ 10초 카운트 시작</button></div>`)}
+      </div>
+      ${withSidebar ? `<div class="sidebar" id="sidebar"></div>` : ''}
+    </div>`;
+  if(withSidebar) renderSidebar();
+  document.getElementById('startTimerBtn').onclick = async () => {
+    ensureAudio();
+    const countdownEndAt = Date.now() + 10000;
+    await fSet('rooms/' + currentRoom + '/state', {phase:'countdown', qIndex: state.qIndex, countdownEndAt, teacherCode});
+    runHostCountdown(state.qIndex, countdownEndAt);
+  };
+}
+
+function runHostCountdown(qIndex, countdownEndAt){
+  const q = ACTIVE_QUESTIONS[qIndex];
+  const withSidebar = qIndex >= TOP7_FROM_INDEX;
+  let lastRemaining = null;
+
+  function tick(){
+    const remaining = Math.max(0, Math.ceil((countdownEndAt - Date.now())/1000));
+    if(remaining !== lastRemaining){ if(remaining>0) playTick(); lastRemaining = remaining; }
+    app.innerHTML = `
+      <p class="sub" style="text-align:center;">Q${qIndex+1} / ${ACTIVE_QUESTIONS.length} · ${q.points}점 · 코드 ${escapeHtml(currentRoom)}</p>
+      <div class="stage-grid ${withSidebar?'with-sidebar':''}">
+        <div>
+          ${questionPanelHtml(q, `
+            <div class="timer-wrap"><div class="timer-circle ${remaining<=3?'urgent':''}">${remaining}</div><span class="status-pill">학생들이 답을 제출하고 있어요</span></div>
+            ${hostOptsPreviewHtml(q)}`)}
+        </div>
+        ${withSidebar ? `<div class="sidebar" id="sidebar"></div>` : ''}
+      </div>`;
+    if(withSidebar) renderSidebar();
+    if(remaining <= 0){
+      clearInterval(countdownTickHandle);
+      finishCountdown(qIndex);
+    }
+  }
+  tick();
+  clearInterval(countdownTickHandle);
+  countdownTickHandle = setInterval(tick, 250);
+}
+
+async function finishCountdown(qIndex){
+  playDing();
+  await fSet('rooms/' + currentRoom + '/state', {phase:'reveal', qIndex, teacherCode});
+}
+
+function gradeQuestion(q, val){
+  if(q.type === 'short') return q.accepted.map(normalizeAnswer).includes(normalizeAnswer(val.text));
+  return val.idx === q.correct;
+}
+
+async function renderHostReveal(state){
+  const q = ACTIVE_QUESTIONS[state.qIndex];
+
+  if(!scoredQuestions.has(state.qIndex)){
+    const answers = await fGet('rooms/' + currentRoom + '/answers/' + state.qIndex) || {};
+    for(const key in answers){
+      const val = answers[key];
+      if(!hostScores.hasOwnProperty(val.name)) hostScores[val.name] = 0;
+      if(gradeQuestion(q, val)) hostScores[val.name] += q.points;
+    }
+    scoredQuestions.add(state.qIndex);
+    await fSet('rooms/' + currentRoom + '/scores', hostScores);
+  }
+
+  const answers2 = await fGet('rooms/' + currentRoom + '/answers/' + state.qIndex) || {};
+  const correctNames = Object.values(answers2).filter(v => gradeQuestion(q, v)).map(v => v.name);
+
+  const withSidebar = state.qIndex >= TOP7_FROM_INDEX;
+  let revealBlock;
+  if(q.type === 'short'){
+    revealBlock = `<div class="quote-block" style="border-left-color:var(--gold);">정답 예시: <strong>${escapeHtml(q.accepted.join(', '))}</strong></div>`;
+  } else {
+    revealBlock = `<div class="opt-grid ${q.type==='ox'?'ox':''}">${q.options.map((opt,i)=>{
+      let cls = 'opt-btn disabled' + (i===q.correct ? ' correct-flash' : '');
+      return `<div class="${cls}"><span class="num">${i+1}</span>${escapeHtml(opt)}</div>`;
+    }).join('')}</div>`;
+  }
+  const isLast = state.qIndex === ACTIVE_QUESTIONS.length - 1;
+
+  app.innerHTML = `
+    <p class="sub" style="text-align:center;">Q${state.qIndex+1} / ${ACTIVE_QUESTIONS.length} · 정답 공개</p>
+    <div class="stage-grid ${withSidebar?'with-sidebar':''}">
+      <div>
+        ${questionPanelHtml(q, `
+          ${revealBlock}
+          <div class="answer-list">
+            <h4>정답자 (${correctNames.length}명)</h4>
+            ${correctNames.length ? correctNames.map(n=>`<span class="correct-name">✓ ${escapeHtml(n)}</span>`).join('') : `<span class="empty-note">이번 문제 정답자가 없어요</span>`}
+          </div>
+          <div class="footer-controls">
+            <button class="primary-btn" id="nextBtn">${isLast ? '🏆 최종 결과 보기' : '다음 문제 →'}</button>
+          </div>`)}
+      </div>
+      ${withSidebar ? `<div class="sidebar" id="sidebar"></div>` : ''}
+    </div>`;
+  if(withSidebar) renderSidebar();
+
+  document.getElementById('nextBtn').onclick = async () => {
+    if(isLast){ await fSet('rooms/' + currentRoom + '/state', {phase:'final', qIndex: state.qIndex, teacherCode}); }
+    else { await fSet('rooms/' + currentRoom + '/state', {phase:'ready', qIndex: state.qIndex+1, teacherCode}); }
+  };
+}
+
+function renderSidebar(){
+  const el = document.getElementById('sidebar');
+  if(!el) return;
+  const ranked = Object.entries(hostScores).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  el.innerHTML = `<h3>🏆 TOP 7</h3>` + (ranked.length ?
+    ranked.map(([name,score],i)=>`<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-name">${escapeHtml(name)}</span><span class="rank-score">${score}점</span></div>`).join('')
+    : `<span class="empty-note">아직 점수가 없어요</span>`);
+}
+
+function renderHostFinal(){
+  const ranked = Object.entries(hostScores).sort((a,b)=>b[1]-a[1]);
+  const top3 = ranked.slice(0,3);
+  const rest = ranked.slice(3);
+  const medals = ['🥇','🥈','🥉'];
+  app.innerHTML = `
+    <div class="center" style="min-height:auto;padding-top:20px;">
+      <p class="eyebrow">Final Result · 코드 ${escapeHtml(currentRoom)}</p>
+      <h1 class="title-lg">🎉 최종 순위 🎉</h1>
+    </div>
+    <div class="podium-row">
+      ${top3.map(([name,score],i)=>`
+        <div class="podium-card p${i+1}">
+          <span class="medal">${medals[i]}</span>
+          <p class="podium-name">${escapeHtml(name)}</p>
+          <p class="podium-score">${score}점</p>
+        </div>`).join('')}
+    </div>
+    <div class="sidebar" style="max-width:420px;margin:0 auto;">
+      <h3>전체 순위</h3>
+      ${rest.length ? rest.map(([name,score],i)=>`<div class="rank-row"><span class="rank-num">${i+4}</span><span class="rank-name">${escapeHtml(name)}</span><span class="rank-score">${score}점</span></div>`).join('') : `<span class="empty-note">참가자가 3명 이하예요</span>`}
+    </div>
+    <div class="center" style="min-height:auto;">
+      <button class="ghost-btn" id="backBtn">← 처음으로 (새 수업 시작)</button>
+    </div>
+  `;
+  document.getElementById('backBtn').onclick = renderRoleSelect;
+}
+
+/* ============================ ADMIN: 문제 관리 ============================ */
+function renderAdminGate(){
+  app.innerHTML = `
+    <div class="center">
+      <p class="eyebrow">문제 관리 · 교사 코드 ${escapeHtml(teacherCode)}</p>
+      <h2 class="title-lg" style="font-size:32px;">비밀번호를 입력하세요</h2>
+      <input type="password" id="pwInput" maxlength="10">
+      <div><button class="primary-btn" id="pwBtn">확인</button></div>
+      <button class="ghost-btn" id="backBtn">← 처음으로</button>
+      <p class="status-pill" id="pwErr" style="color:#FF8A94;"></p>
+    </div>`;
+  const input = document.getElementById('pwInput');
+  const go = () => {
+    if(input.value === ADMIN_PW) renderAdminPanel();
+    else document.getElementById('pwErr').textContent = "비밀번호가 틀렸어요";
+  };
+  document.getElementById('pwBtn').onclick = go;
+  document.getElementById('backBtn').onclick = renderRoleSelect;
+  input.addEventListener('keydown', e => { if(e.key==='Enter') go(); });
+  input.focus();
+}
+
+let adminBank = [];
+
+async function renderAdminPanel(){
+  adminBank = await loadQuestions(teacherCode);
+  drawAdminPanel();
+}
+
+function emptyFormState(){
+  return { id:null, round:"", type:"mc", points:10, prompt:"", quote:"",
+    options:["","","",""], correct:0, correctOx:0, accepted:"" };
+}
+let adminForm = emptyFormState();
+
+function drawAdminPanel(){
+  app.innerHTML = `
+    <div class="admin-wrap">
+      <div class="admin-topbar">
+        <div>
+          <p class="eyebrow" style="margin-bottom:4px;">문제 관리 · 교사 코드 ${escapeHtml(teacherCode)}</p>
+          <h2 style="font-family:'Black Han Sans',sans-serif; font-size:26px; color:var(--gold-soft);">나만의 문제 은행</h2>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="small-btn" id="resetBtn">기본 20문제 불러오기</button>
+          <button class="ghost-btn" id="backBtn">← 처음으로</button>
+        </div>
+      </div>
+      ${bookmarkHint()}
+
+      <div class="admin-card" style="margin-top:18px;">
+        <h3>${adminForm.id ? '문제 수정' : '새 문제 추가'}</h3>
+        <div class="field-grid2">
+          <div class="field-row">
+            <label>라운드 이름</label>
+            <input type="text" id="f_round" placeholder="예: 01 · 단어 뜻" value="${escapeAttr(adminForm.round)}">
+          </div>
+          <div class="field-row">
+            <label>배점</label>
+            <input type="number" id="f_points" value="${adminForm.points}">
+          </div>
+        </div>
+        <div class="field-row">
+          <label>문제 유형</label>
+          <select id="f_type">
+            <option value="mc" ${adminForm.type==='mc'?'selected':''}>4지선다</option>
+            <option value="ox" ${adminForm.type==='ox'?'selected':''}>OX 퀴즈</option>
+            <option value="short" ${adminForm.type==='short'?'selected':''}>주관식</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>문제 (발문)</label>
+          <textarea id="f_prompt" placeholder="문제 내용을 입력하세요">${escapeHtml(adminForm.prompt)}</textarea>
+        </div>
+        <div class="field-row">
+          <label>참고 문장 / 인용문 (선택)</label>
+          <textarea id="f_quote" placeholder="본문 인용 등, 없으면 비워두세요">${escapeHtml(adminForm.quote)}</textarea>
+        </div>
+        <div id="typeFields"></div>
+        <div class="footer-controls" style="justify-content:flex-start;">
+          <button class="primary-btn" id="saveQBtn">${adminForm.id ? '수정 저장' : '문제 추가'}</button>
+          ${adminForm.id ? `<button class="ghost-btn" id="cancelEditBtn">취소</button>` : ''}
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h3>현재 문제 목록 (${adminBank.length}문항)</h3>
+        <div id="qList"></div>
+      </div>
+    </div>`;
+
+  drawTypeFields();
+  drawQList();
+
+  document.getElementById('backBtn').onclick = renderRoleSelect;
+  document.getElementById('resetBtn').onclick = async () => {
+    if(!confirm('기본 20문제로 초기화할까요? 현재 목록은 사라져요.')) return;
+    adminBank = DEFAULT_QUESTIONS.map(q => ({...q, id: genId()}));
+    await saveBank(teacherCode, adminBank);
+    drawAdminPanel();
+  };
+  document.getElementById('f_type').onchange = (e) => { adminForm.type = e.target.value; drawTypeFields(); };
+  document.getElementById('saveQBtn').onclick = onSaveQuestion;
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  if(cancelBtn) cancelBtn.onclick = () => { adminForm = emptyFormState(); drawAdminPanel(); };
+}
+
+function drawTypeFields(){
+  const el = document.getElementById('typeFields');
+  if(adminForm.type === 'mc'){
+    el.innerHTML = `
+      <div class="field-row"><label>보기 (정답에 라디오 표시)</label>
+        ${[0,1,2,3].map(i => `
+          <div class="opt-edit-row">
+            <input type="radio" name="mcCorrect" value="${i}" ${adminForm.correct===i?'checked':''}>
+            <input type="text" id="f_opt${i}" placeholder="보기 ${i+1}" value="${escapeAttr(adminForm.options[i]||'')}">
+          </div>`).join('')}
+      </div>`;
+  } else if(adminForm.type === 'ox'){
+    el.innerHTML = `
+      <div class="field-row"><label>정답</label>
+        <div class="opt-edit-row"><input type="radio" name="oxCorrect" value="0" ${adminForm.correctOx===0?'checked':''}> <span>O</span></div>
+        <div class="opt-edit-row"><input type="radio" name="oxCorrect" value="1" ${adminForm.correctOx===1?'checked':''}> <span>X</span></div>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="field-row">
+        <label>정답으로 인정할 답 (쉼표로 구분, 대소문자·띄어쓰기 무관)</label>
+        <input type="text" id="f_accepted" placeholder="예: 바이킹, bye king" value="${escapeAttr(adminForm.accepted)}">
+      </div>`;
+  }
+}
+
+function readFormFromDom(){
+  adminForm.round = document.getElementById('f_round').value.trim() || "새 라운드";
+  adminForm.points = parseInt(document.getElementById('f_points').value,10) || 0;
+  adminForm.prompt = document.getElementById('f_prompt').value.trim();
+  adminForm.quote = document.getElementById('f_quote').value.trim();
+  if(adminForm.type === 'mc'){
+    adminForm.options = [0,1,2,3].map(i => document.getElementById('f_opt'+i).value.trim());
+    const checked = document.querySelector('input[name=mcCorrect]:checked');
+    adminForm.correct = checked ? parseInt(checked.value,10) : 0;
+  } else if(adminForm.type === 'ox'){
+    const checked = document.querySelector('input[name=oxCorrect]:checked');
+    adminForm.correctOx = checked ? parseInt(checked.value,10) : 0;
+  } else {
+    adminForm.accepted = document.getElementById('f_accepted').value.trim();
+  }
+}
+
+async function onSaveQuestion(){
+  readFormFromDom();
+  if(!adminForm.prompt){ alert('문제 내용을 입력해주세요.'); return; }
+
+  let qObj = { id: adminForm.id || genId(), round: adminForm.round, points: adminForm.points, type: adminForm.type, prompt: adminForm.prompt };
+  if(adminForm.quote) qObj.quote = adminForm.quote;
+
+  if(adminForm.type === 'mc'){
+    if(adminForm.options.some(o => !o)){ alert('보기 4개를 모두 입력해주세요.'); return; }
+    qObj.options = adminForm.options; qObj.correct = adminForm.correct;
+  } else if(adminForm.type === 'ox'){
+    qObj.options = ["O","X"]; qObj.correct = adminForm.correctOx;
+  } else {
+    const accepted = adminForm.accepted.split(',').map(s=>s.trim()).filter(Boolean);
+    if(accepted.length === 0){ alert('정답으로 인정할 답을 최소 1개 입력해주세요.'); return; }
+    qObj.accepted = accepted;
+  }
+
+  if(adminForm.id){
+    const idx = adminBank.findIndex(q => q.id === adminForm.id);
+    if(idx >= 0) adminBank[idx] = qObj;
+  } else {
+    adminBank.push(qObj);
+  }
+  await saveBank(teacherCode, adminBank);
+  adminForm = emptyFormState();
+  drawAdminPanel();
+}
+
+function drawQList(){
+  const el = document.getElementById('qList');
+  if(adminBank.length === 0){ el.innerHTML = `<span class="empty-note">등록된 문제가 없어요. 위에서 추가하거나 기본 20문제를 불러오세요.</span>`; return; }
+  el.innerHTML = adminBank.map((q,i) => `
+    <div class="qlist-item">
+      <span class="type-badge ${q.type}">${q.type==='mc'?'4지선다':q.type==='ox'?'OX':'주관식'}</span>
+      <div class="meta">
+        <div class="rd">${escapeHtml(q.round)} · ${q.points}점</div>
+        <div class="pr">${i+1}. ${escapeHtml(q.prompt)}</div>
+      </div>
+      <div class="btns">
+        <button class="small-btn" data-act="up" data-id="${q.id}">↑</button>
+        <button class="small-btn" data-act="down" data-id="${q.id}">↓</button>
+        <button class="small-btn" data-act="edit" data-id="${q.id}">수정</button>
+        <button class="danger-btn" data-act="del" data-id="${q.id}">삭제</button>
+      </div>
+    </div>`).join('');
+
+  el.querySelectorAll('button').forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      const act = btn.dataset.act;
+      const idx = adminBank.findIndex(q => q.id === id);
+      if(idx < 0) return;
+      if(act === 'edit'){
+        const q = adminBank[idx];
+        adminForm = {
+          id: q.id, round: q.round, type: q.type, points: q.points, prompt: q.prompt, quote: q.quote || "",
+          options: q.type==='mc' ? q.options.slice() : ["","","",""],
+          correct: q.type==='mc' ? q.correct : 0,
+          correctOx: q.type==='ox' ? q.correct : 0,
+          accepted: q.type==='short' ? q.accepted.join(', ') : ""
+        };
+        drawAdminPanel();
+        window.scrollTo({top:0, behavior:'smooth'});
+      } else if(act === 'del'){
+        if(!confirm('이 문제를 삭제할까요?')) return;
+        adminBank.splice(idx,1);
+        await saveBank(teacherCode, adminBank);
+        drawQList();
+        drawAdminPanel();
+      } else if(act === 'up' && idx > 0){
+        [adminBank[idx-1], adminBank[idx]] = [adminBank[idx], adminBank[idx-1]];
+        await saveBank(teacherCode, adminBank);
+        drawQList();
+      } else if(act === 'down' && idx < adminBank.length-1){
+        [adminBank[idx+1], adminBank[idx]] = [adminBank[idx], adminBank[idx+1]];
+        await saveBank(teacherCode, adminBank);
+        drawQList();
+      }
+    };
+  });
+}
+
+/* ============================ UTIL ============================ */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+</script>
+</body>
+</html>
