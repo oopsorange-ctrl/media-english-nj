@@ -75,7 +75,7 @@ export const cards: LinkCard[] = [
     number: "02",
     name: "Media English Vocabs",
     description: "미디어영어 영단어 학습장",
-    href: "https://claude.ai/public/artifacts/2958041f-a305-4c92-b2a4-57f1edd4cf6f",
+    href: "https://claude.ai/code/artifact/558e0d83-df6d-4bab-b862-4e86f03d92c1",
     thumb: { kind: "icon", icon: "docs" }
   },
   {
