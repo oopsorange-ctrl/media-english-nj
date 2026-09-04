@@ -409,23 +409,21 @@ function renderRoleSelect(){
       <div class="role-row">
         <button class="role-btn" id="btnStudent"><span class="ico">🎓</span>학생으로 참가</button>
         <button class="role-btn" id="btnHost"><span class="ico">🖥️</span>진행자 화면 (교사)</button>
-        <button class="role-btn" id="btnAdmin"><span class="ico">⚙️</span>문제 관리</button>
       </div>
-      <p class="status-pill" style="margin-top:24px;max-width:420px;">로그인 없이 입장 코드 + 이름만으로 참가할 수 있어요.</p>
+      <p class="status-pill" style="margin-top:24px;max-width:420px;">학생은 로그인 없이 입장 코드 + 이름만으로 참가할 수 있어요.</p>
     </div>`;
   document.getElementById('btnStudent').onclick = () => { ensureAudio(); role='student'; renderStudentJoin(); };
   document.getElementById('btnHost').onclick = () => { ensureAudio(); role='host'; goHostFlow(); };
-  document.getElementById('btnAdmin').onclick = () => { role='admin'; goAdminFlow(); };
 }
 
 /* ============================ TEACHER CODE ============================ */
-function renderTeacherCodeEntry(nextRole){
+function renderTeacherCodeEntry(){
   app.innerHTML = `
     <div class="center">
-      <p class="eyebrow">교사 코드</p>
-      <h2 class="title-lg" style="font-size:32px;">본인만의 코드를 정해주세요</h2>
-      <p class="sub" style="max-width:360px;">이니셜처럼 짧게 정하면 돼요 (예: NJ). 이 코드로 나만의 문제은행이 따로 저장돼요.</p>
-      <input type="text" id="tcInput" placeholder="예: NJ" maxlength="12">
+      <p class="eyebrow">진행자 화면</p>
+      <h2 class="title-lg" style="font-size:32px;">선생님 코드를 입력하세요</h2>
+      <p class="sub" style="max-width:380px;">이름이나 이니셜처럼 본인만 알아볼 수 있게 정하면 돼요 (예: NJ, 정미연). 이 코드로 나만의 문제은행이 따로 저장됩니다. 미리 등록할 필요 없이 처음 입력하는 순간 만들어져요.</p>
+      <input type="text" id="tcInput" placeholder="예: 정미연" maxlength="20">
       <div><button class="primary-btn" id="tcBtn">확인</button></div>
       <button class="ghost-btn" id="backBtn">← 처음으로</button>
     </div>`;
@@ -435,8 +433,7 @@ function renderTeacherCodeEntry(nextRole){
     if(!val) return;
     teacherCode = val;
     setUrlParam('t', teacherCode);
-    if(nextRole === 'host') renderHostRoomSetup();
-    else renderAdminGate();
+    renderTeacherHub();
   };
   document.getElementById('tcBtn').onclick = go;
   document.getElementById('backBtn').onclick = renderRoleSelect;
@@ -451,37 +448,45 @@ function resolveTeacherCode(){
 }
 function goHostFlow(){
   const tc = resolveTeacherCode();
-  if(tc) renderHostRoomSetup(); else renderTeacherCodeEntry('host');
-}
-function goAdminFlow(){
-  const tc = resolveTeacherCode();
-  if(tc) renderAdminGate(); else renderTeacherCodeEntry('admin');
+  if(tc) renderTeacherHub(); else renderTeacherCodeEntry();
 }
 function bookmarkHint(){
   return `<div class="bookmark-hint">🔖 이 주소를 즐겨찾기 해두면 다음부터 코드 입력 없이 바로 들어와요:<br>${escapeHtml(window.location.href)}</div>`;
 }
 
-/* ============================ HOST: ROOM SETUP ============================ */
-function renderHostRoomSetup(){
+/* ============================ 교사 허브 ============================ */
+async function renderTeacherHub(){
+  cleanupListeners();
+  ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
   app.innerHTML = `
     <div class="center">
-      <p class="eyebrow">진행자 화면 · 교사 코드 “${escapeHtml(teacherCode)}”</p>
-      <h1 class="title-lg" style="font-size:40px;">새 수업을 시작할까요?</h1>
-      <p class="sub">버튼을 누르면 4자리 입장 코드가 새로 생겨요. 반이 바뀔 때마다 다시 눌러서 새 코드를 만들면 이전 반 데이터와 완전히 분리돼요.</p>
-      <button class="primary-btn" id="genRoomBtn">🎲 새 수업 코드 생성</button>
+      <div class="bell-wrap"><div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-icon">🔔</div></div>
+      <p class="eyebrow">진행자 화면</p>
+      <h1 class="title-lg" style="font-size:38px;">${escapeHtml(teacherCode)} 선생님</h1>
+      <p class="sub">현재 등록된 문제: <strong style="color:var(--gold-soft)">${ACTIVE_QUESTIONS.length}문항</strong></p>
+      <div class="role-row">
+        <button class="role-btn" id="btnNewRoom"><span class="ico">🎲</span>새 수업 코드 생성</button>
+        <button class="role-btn" id="btnManage"><span class="ico">⚙️</span>문제 관리</button>
+      </div>
       ${bookmarkHint()}
+      <button class="ghost-btn" id="btnChangeTeacher">다른 선생님 코드로 전환</button>
       <button class="ghost-btn" id="backBtn">← 처음으로</button>
     </div>`;
-  document.getElementById('genRoomBtn').onclick = async () => {
-    const roomCode = await genRoomCode();
-    currentRoom = roomCode;
-    hostScores = {}; scoredQuestions = new Set();
-    ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
-    await fSet('rooms/' + roomCode + '/state', {phase:'lobby', qIndex:-1, teacherCode});
-    await fSet('rooms/' + roomCode + '/scores', {});
-    startHostListening();
-  };
+  document.getElementById('btnNewRoom').onclick = createNewRoom;
+  document.getElementById('btnManage').onclick = () => renderAdminGate();
+  document.getElementById('btnChangeTeacher').onclick = () => { teacherCode = null; renderTeacherCodeEntry(); };
   document.getElementById('backBtn').onclick = renderRoleSelect;
+}
+
+async function createNewRoom(){
+  ensureAudio();
+  const roomCode = await genRoomCode();
+  currentRoom = roomCode;
+  hostScores = {}; scoredQuestions = new Set(); hostStudentsCache = [];
+  ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
+  await fSet('rooms/' + roomCode + '/state', {phase:'lobby', qIndex:-1, teacherCode});
+  await fSet('rooms/' + roomCode + '/scores', {});
+  startHostListening();
 }
 
 /* ============================ STUDENT: JOIN ============================ */
@@ -722,7 +727,7 @@ function renderHostLobby(){
       <p class="sub">학생들이 이 코드와 이름을 태블릿에 입력하면 실시간으로 여기에 나타나요</p>
       <div class="chip-wrap" id="chipWrap"></div>
       <button class="primary-btn" id="startBtn" style="margin-top:30px;">게임 시작 (<span id="studentCount">0</span>명 참가)</button>
-      <button class="ghost-btn" id="backBtn">← 처음으로 (다른 수업 코드 만들기)</button>
+      <button class="ghost-btn" id="backBtn">← 교사 화면으로 (다른 수업 코드 만들기)</button>
     </div>`;
   renderHostLobbyChips();
   document.getElementById('startBtn').onclick = async () => {
@@ -731,7 +736,7 @@ function renderHostLobby(){
     await fSet('rooms/' + currentRoom + '/state', {phase:'ready', qIndex:0, teacherCode});
     await fSet('rooms/' + currentRoom + '/scores', {});
   };
-  document.getElementById('backBtn').onclick = renderRoleSelect;
+  document.getElementById('backBtn').onclick = renderTeacherHub;
 }
 function renderHostLobbyChips(){
   const wrap = document.getElementById('chipWrap');
@@ -913,21 +918,21 @@ function renderHostFinal(){
       ${rest.length ? rest.map(([name,score],i)=>`<div class="rank-row"><span class="rank-num">${i+4}</span><span class="rank-name">${escapeHtml(name)}</span><span class="rank-score">${score}점</span></div>`).join('') : `<span class="empty-note">참가자가 3명 이하예요</span>`}
     </div>
     <div class="center" style="min-height:auto;">
-      <button class="ghost-btn" id="backBtn">← 처음으로 (새 수업 시작)</button>
+      <button class="ghost-btn" id="backBtn">← 교사 화면으로 (새 수업 시작)</button>
     </div>
   `;
-  document.getElementById('backBtn').onclick = renderRoleSelect;
+  document.getElementById('backBtn').onclick = renderTeacherHub;
 }
 
 /* ============================ ADMIN: 문제 관리 ============================ */
 function renderAdminGate(){
   app.innerHTML = `
     <div class="center">
-      <p class="eyebrow">문제 관리 · 교사 코드 ${escapeHtml(teacherCode)}</p>
+      <p class="eyebrow">문제 관리 · ${escapeHtml(teacherCode)} 선생님</p>
       <h2 class="title-lg" style="font-size:32px;">비밀번호를 입력하세요</h2>
       <input type="password" id="pwInput" maxlength="10">
       <div><button class="primary-btn" id="pwBtn">확인</button></div>
-      <button class="ghost-btn" id="backBtn">← 처음으로</button>
+      <button class="ghost-btn" id="backBtn">← 교사 화면으로</button>
       <p class="status-pill" id="pwErr" style="color:#FF8A94;"></p>
     </div>`;
   const input = document.getElementById('pwInput');
@@ -936,7 +941,7 @@ function renderAdminGate(){
     else document.getElementById('pwErr').textContent = "비밀번호가 틀렸어요";
   };
   document.getElementById('pwBtn').onclick = go;
-  document.getElementById('backBtn').onclick = renderRoleSelect;
+  document.getElementById('backBtn').onclick = renderTeacherHub;
   input.addEventListener('keydown', e => { if(e.key==='Enter') go(); });
   input.focus();
 }
@@ -959,12 +964,12 @@ function drawAdminPanel(){
     <div class="admin-wrap">
       <div class="admin-topbar">
         <div>
-          <p class="eyebrow" style="margin-bottom:4px;">문제 관리 · 교사 코드 ${escapeHtml(teacherCode)}</p>
+          <p class="eyebrow" style="margin-bottom:4px;">문제 관리 · ${escapeHtml(teacherCode)} 선생님</p>
           <h2 style="font-family:'Black Han Sans',sans-serif; font-size:26px; color:var(--gold-soft);">나만의 문제 은행</h2>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="small-btn" id="resetBtn">기본 20문제 불러오기</button>
-          <button class="ghost-btn" id="backBtn">← 처음으로</button>
+          <button class="ghost-btn" id="backBtn">← 교사 화면으로</button>
         </div>
       </div>
       ${bookmarkHint()}
@@ -1013,7 +1018,7 @@ function drawAdminPanel(){
   drawTypeFields();
   drawQList();
 
-  document.getElementById('backBtn').onclick = renderRoleSelect;
+  document.getElementById('backBtn').onclick = renderTeacherHub;
   document.getElementById('resetBtn').onclick = async () => {
     if(!confirm('기본 20문제로 초기화할까요? 현재 목록은 사라져요.')) return;
     adminBank = DEFAULT_QUESTIONS.map(q => ({...q, id: genId()}));
