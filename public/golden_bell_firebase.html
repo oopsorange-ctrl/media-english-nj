@@ -123,12 +123,16 @@
   .opt-btn.wrong-flash{ opacity:.35; }
 
   .timer-wrap{ display:flex; align-items:center; gap:16px; margin:10px 0 22px; }
+  /* 대기/카운트/공개 어느 단계에서도 같은 높이를 차지해 아래 보기가 밀리지 않는다 */
+  .timer-slot{ display:flex; align-items:center; gap:16px; margin:10px 0 22px; min-height:64px; }
   .timer-circle{
     width:64px; height:64px; border-radius:50%; border:4px solid var(--gold);
     display:flex; align-items:center; justify-content:center; font-family:'Black Han Sans',sans-serif;
     font-size:24px; color:var(--gold-soft); flex-shrink:0;
   }
   .timer-circle.urgent{ border-color:var(--crimson); color:#FF8A94; animation:pulse 0.6s infinite; }
+  .timer-circle.idle{ border-color:rgba(255,255,255,.14); color:var(--slate); font-size:22px; }
+  .timer-circle.done{ border-color:var(--green); color:var(--green); font-size:26px; }
   @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
 
   .answer-list{ margin-top:20px; }
@@ -612,6 +616,28 @@ function renderOptionsBlock(q, opts){
   return `<div class="opt-grid ${q.type==='ox'?'ox':''}">${optsHtml}</div>`;
 }
 
+function timerSlotHtml(state, isCountdown, remaining){
+  // 어떤 단계에서도 같은 높이를 차지해 아래 보기가 밀리지 않게 한다
+  let circleContent, circleCls, note;
+  if(isCountdown){
+    circleContent = remaining;
+    circleCls = 'timer-circle' + (remaining<=3 ? ' urgent' : '');
+    note = '답을 선택하세요';
+  } else if(state.phase === 'reveal'){
+    circleContent = '✓';
+    circleCls = 'timer-circle done';
+    note = '정답 공개';
+  } else {
+    circleContent = '⏱';
+    circleCls = 'timer-circle idle';
+    note = '선생님이 시작하면 답할 수 있어요';
+  }
+  return `<div class="timer-slot">
+    <div class="${circleCls}" id="timerCircle">${circleContent}</div>
+    <span class="status-pill" id="timerNote">${note}</span>
+  </div>`;
+}
+
 function renderStudentQuestion(state, isCountdown, remaining){
   const q = ACTIVE_QUESTIONS[state.qIndex];
   if(!q){ renderStudentWaiting("문제를 불러오는 중..."); return; }
@@ -622,9 +648,8 @@ function renderStudentQuestion(state, isCountdown, remaining){
       <span class="round-tag">${escapeHtml(q.round)}</span>
       <p class="qtext-big">${escapeHtml(q.prompt)}</p>
       ${q.quote ? `<div class="quote-block" style="white-space:pre-line;font-size:14px;">${escapeHtml(q.quote)}</div>` : ''}
-      ${isCountdown ? `<div class="timer-wrap"><div class="timer-circle ${remaining<=3?'urgent':''}" id="timerCircle">${remaining}</div><span class="status-pill" id="timerNote">답을 선택하세요</span></div>` : ''}
+      ${timerSlotHtml(state, isCountdown, remaining)}
       ${renderOptionsBlock(q, {disabled, reveal: state.phase==='reveal'})}
-      ${!isCountdown && state.phase==='ready' ? `<p class="status-pill" style="margin-top:16px;">선생님이 타이머를 시작하면 답할 수 있어요</p>` : ''}
     </div>`;
 
   if(q.type === 'short'){
