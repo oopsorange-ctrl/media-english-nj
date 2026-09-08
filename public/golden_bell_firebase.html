@@ -169,11 +169,27 @@
   .field-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .opt-edit-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
   .opt-edit-row input[type=radio]{ width:18px; height:18px; accent-color:var(--gold); flex-shrink:0; }
-  .qlist-item{ display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--navy-light); border-radius:10px; margin-bottom:8px; }
+  .qlist-item{ display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--navy-light); border-radius:10px; margin-bottom:8px; border:2px solid transparent; transition:.12s; }
   .qlist-item .meta{ flex:1; min-width:0; }
   .qlist-item .meta .rd{ font-size:11px; color:var(--gold); font-weight:800; }
   .qlist-item .meta .pr{ font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .qlist-item .btns{ display:flex; gap:6px; flex-shrink:0; }
+  .qlist-item.dragging{ opacity:.4; border-color:var(--gold); }
+  .qlist-item.drop-above{ border-top-color:var(--gold); box-shadow:0 -3px 0 -1px var(--gold); }
+  .qlist-item.drop-below{ border-bottom-color:var(--gold); box-shadow:0 3px 0 -1px var(--gold); }
+  .drag-handle{ cursor:grab; color:var(--slate); font-size:17px; flex-shrink:0; user-select:none; letter-spacing:-2px; }
+  .drag-handle:active{ cursor:grabbing; }
+  .qnum-badge{
+    font-family:'Black Han Sans',sans-serif; font-size:14px; color:var(--gold);
+    min-width:24px; text-align:center; flex-shrink:0;
+  }
+  .drag-hint{ font-size:12px; color:var(--slate); margin-bottom:12px; }
+  .accept-all-row{
+    display:flex; align-items:flex-start; gap:10px; padding:12px 14px;
+    background:rgba(244,196,48,.07); border:1px solid var(--line); border-radius:10px;
+  }
+  .accept-all-row input[type=checkbox]{ width:18px; height:18px; accent-color:var(--gold); flex-shrink:0; margin-top:1px; }
+  .accept-all-row label{ font-size:13.5px; font-weight:700; color:var(--gold-soft); }
   .type-badge{ font-size:10.5px; padding:3px 8px; border-radius:999px; font-weight:800; letter-spacing:.02em; }
   .type-badge.mc{ background:rgba(244,196,48,.15); color:var(--gold-soft); }
   .type-badge.ox{ background:rgba(61,220,151,.15); color:var(--green); }
@@ -569,10 +585,10 @@ function renderOptionsBlock(q, opts){
   const revealMode = opts.reveal;
   if(q.type === 'short'){
     if(revealMode){
-      const correct = mySubmittedText !== null && q.accepted.map(normalizeAnswer).includes(normalizeAnswer(mySubmittedText));
+      const correct = mySubmittedText !== null && gradeQuestion(q, {text: mySubmittedText});
       return `<p class="status-pill" style="font-size:14px;">내가 쓴 답: <strong style="color:var(--ivory)">${mySubmittedText ? escapeHtml(mySubmittedText) : '(제출 안 함)'}</strong></p>
         <p class="status-pill">${mySubmittedText===null ? '' : (correct ? '✅ 정답입니다!' : '❌ 아쉬워요')}</p>
-        <p class="status-pill">정답 예시: ${escapeHtml(q.accepted.join(', '))}</p>`;
+        <p class="status-pill">${escapeHtml(shortAnswerLabel(q))}</p>`;
     }
     return `
       <div style="display:flex; gap:10px; max-width:420px;">
@@ -758,7 +774,7 @@ function questionPanelHtml(q, extra){
     </div>`;
 }
 function hostOptsPreviewHtml(q){
-  if(q.type === 'short') return `<div class="quote-block" style="border-left-color:var(--gold);">✍️ 주관식 문제 — 학생이 직접 답을 입력합니다</div>`;
+  if(q.type === 'short') return `<div class="quote-block" style="border-left-color:var(--gold);">✍️ 주관식 문제 — 학생이 직접 답을 입력합니다${q.acceptAll ? ' <strong>(모두 정답)</strong>' : ''}</div>`;
   return `<div class="opt-grid ${q.type==='ox'?'ox':''}">${q.options.map((opt,i)=>`<div class="opt-btn disabled"><span class="num">${i+1}</span>${escapeHtml(opt)}</div>`).join('')}</div>`;
 }
 
@@ -829,8 +845,15 @@ async function finishCountdown(qIndex){
 }
 
 function gradeQuestion(q, val){
-  if(q.type === 'short') return q.accepted.map(normalizeAnswer).includes(normalizeAnswer(val.text));
+  if(q.type === 'short'){
+    // '모두 정답' 문항: 빈칸이 아니면 전부 정답 처리
+    if(q.acceptAll) return !!(val.text && String(val.text).trim());
+    return (q.accepted || []).map(normalizeAnswer).includes(normalizeAnswer(val.text));
+  }
   return val.idx === q.correct;
+}
+function shortAnswerLabel(q){
+  return q.acceptAll ? '모두 정답 처리되는 문항이에요' : '정답 예시: ' + (q.accepted || []).join(', ');
 }
 
 async function renderHostReveal(state){
@@ -853,7 +876,7 @@ async function renderHostReveal(state){
   const withSidebar = state.qIndex >= TOP7_FROM_INDEX;
   let revealBlock;
   if(q.type === 'short'){
-    revealBlock = `<div class="quote-block" style="border-left-color:var(--gold);">정답 예시: <strong>${escapeHtml(q.accepted.join(', '))}</strong></div>`;
+    revealBlock = `<div class="quote-block" style="border-left-color:var(--gold);">${q.acceptAll ? '🎉 <strong>모두 정답</strong> — 답을 제출한 모든 학생이 정답 처리됩니다' : '정답 예시: <strong>' + escapeHtml((q.accepted||[]).join(', ')) + '</strong>'}</div>`;
   } else {
     revealBlock = `<div class="opt-grid ${q.type==='ox'?'ox':''}">${q.options.map((opt,i)=>{
       let cls = 'opt-btn disabled' + (i===q.correct ? ' correct-flash' : '');
@@ -955,7 +978,7 @@ async function renderAdminPanel(){
 
 function emptyFormState(){
   return { id:null, round:"", type:"mc", points:10, prompt:"", quote:"",
-    options:["","","",""], correct:0, correctOx:0, accepted:"" };
+    options:["","","",""], correct:0, correctOx:0, accepted:"", acceptAll:false };
 }
 let adminForm = emptyFormState();
 
@@ -1051,9 +1074,23 @@ function drawTypeFields(){
   } else {
     el.innerHTML = `
       <div class="field-row">
+        <div class="accept-all-row">
+          <input type="checkbox" id="f_acceptAll" ${adminForm.acceptAll?'checked':''}>
+          <label for="f_acceptAll" style="margin:0; cursor:pointer;">
+            🎉 모두 정답 처리 (오픈 퀘스천)
+            <span style="display:block; font-weight:400; color:var(--slate); font-size:11.5px; margin-top:2px;">답을 제출하기만 하면 내용과 상관없이 정답이 됩니다</span>
+          </label>
+        </div>
+      </div>
+      <div class="field-row" id="acceptedWrap" style="${adminForm.acceptAll?'display:none;':''}">
         <label>정답으로 인정할 답 (쉼표로 구분, 대소문자·띄어쓰기 무관)</label>
         <input type="text" id="f_accepted" placeholder="예: 바이킹, bye king" value="${escapeAttr(adminForm.accepted)}">
       </div>`;
+    const chk = document.getElementById('f_acceptAll');
+    chk.onchange = () => {
+      adminForm.acceptAll = chk.checked;
+      document.getElementById('acceptedWrap').style.display = chk.checked ? 'none' : '';
+    };
   }
 }
 
@@ -1070,7 +1107,10 @@ function readFormFromDom(){
     const checked = document.querySelector('input[name=oxCorrect]:checked');
     adminForm.correctOx = checked ? parseInt(checked.value,10) : 0;
   } else {
-    adminForm.accepted = document.getElementById('f_accepted').value.trim();
+    const chk = document.getElementById('f_acceptAll');
+    adminForm.acceptAll = chk ? chk.checked : false;
+    const acc = document.getElementById('f_accepted');
+    adminForm.accepted = acc ? acc.value.trim() : "";
   }
 }
 
@@ -1087,9 +1127,15 @@ async function onSaveQuestion(){
   } else if(adminForm.type === 'ox'){
     qObj.options = ["O","X"]; qObj.correct = adminForm.correctOx;
   } else {
-    const accepted = adminForm.accepted.split(',').map(s=>s.trim()).filter(Boolean);
-    if(accepted.length === 0){ alert('정답으로 인정할 답을 최소 1개 입력해주세요.'); return; }
-    qObj.accepted = accepted;
+    if(adminForm.acceptAll){
+      qObj.acceptAll = true;
+      qObj.accepted = [];
+    } else {
+      const accepted = adminForm.accepted.split(',').map(s=>s.trim()).filter(Boolean);
+      if(accepted.length === 0){ alert('정답으로 인정할 답을 최소 1개 입력하거나, "모두 정답"을 체크해주세요.'); return; }
+      qObj.accepted = accepted;
+      qObj.acceptAll = false;
+    }
   }
 
   if(adminForm.id){
@@ -1103,15 +1149,20 @@ async function onSaveQuestion(){
   drawAdminPanel();
 }
 
+let dragSrcId = null;
+
 function drawQList(){
   const el = document.getElementById('qList');
   if(adminBank.length === 0){ el.innerHTML = `<span class="empty-note">등록된 문제가 없어요. 위에서 추가하거나 기본 20문제를 불러오세요.</span>`; return; }
-  el.innerHTML = adminBank.map((q,i) => `
-    <div class="qlist-item">
+  el.innerHTML = `<p class="drag-hint">↕️ 문항을 끌어서 순서를 바꿀 수 있어요. 번호는 자동으로 다시 매겨집니다.</p>` +
+    adminBank.map((q,i) => `
+    <div class="qlist-item" draggable="true" data-id="${q.id}">
+      <span class="drag-handle" title="끌어서 이동">⠿</span>
+      <span class="qnum-badge">${i+1}</span>
       <span class="type-badge ${q.type}">${q.type==='mc'?'4지선다':q.type==='ox'?'OX':'주관식'}</span>
       <div class="meta">
-        <div class="rd">${escapeHtml(q.round)} · ${q.points}점</div>
-        <div class="pr">${i+1}. ${escapeHtml(q.prompt)}</div>
+        <div class="rd">${escapeHtml(q.round)} · ${q.points}점${q.type==='short'&&q.acceptAll?' · 모두 정답':''}</div>
+        <div class="pr">${escapeHtml(q.prompt)}</div>
       </div>
       <div class="btns">
         <button class="small-btn" data-act="up" data-id="${q.id}">↑</button>
@@ -1121,6 +1172,54 @@ function drawQList(){
       </div>
     </div>`).join('');
 
+  // ---- 드래그앤드롭 ----
+  el.querySelectorAll('.qlist-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragSrcId = item.dataset.id;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try{ e.dataTransfer.setData('text/plain', dragSrcId); }catch(err){}
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      el.querySelectorAll('.qlist-item').forEach(x => x.classList.remove('drop-above','drop-below'));
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if(item.dataset.id === dragSrcId) return;
+      const rect = item.getBoundingClientRect();
+      const isAbove = (e.clientY - rect.top) < rect.height/2;
+      item.classList.toggle('drop-above', isAbove);
+      item.classList.toggle('drop-below', !isAbove);
+    });
+    item.addEventListener('dragleave', () => {
+      item.classList.remove('drop-above','drop-below');
+    });
+    item.addEventListener('drop', async e => {
+      e.preventDefault();
+      const targetId = item.dataset.id;
+      item.classList.remove('drop-above','drop-below');
+      if(!dragSrcId || dragSrcId === targetId) return;
+
+      const from = adminBank.findIndex(q => q.id === dragSrcId);
+      let to = adminBank.findIndex(q => q.id === targetId);
+      if(from < 0 || to < 0) return;
+
+      const rect = item.getBoundingClientRect();
+      const isAbove = (e.clientY - rect.top) < rect.height/2;
+
+      const [moved] = adminBank.splice(from, 1);
+      // splice 이후 인덱스가 밀리므로 다시 계산
+      to = adminBank.findIndex(q => q.id === targetId);
+      adminBank.splice(isAbove ? to : to + 1, 0, moved);
+
+      dragSrcId = null;
+      await saveBank(teacherCode, adminBank);
+      drawQList();
+    });
+  });
+
+  // ---- 버튼 ----
   el.querySelectorAll('button').forEach(btn => {
     btn.onclick = async () => {
       const id = btn.dataset.id;
@@ -1134,7 +1233,8 @@ function drawQList(){
           options: q.type==='mc' ? q.options.slice() : ["","","",""],
           correct: q.type==='mc' ? q.correct : 0,
           correctOx: q.type==='ox' ? q.correct : 0,
-          accepted: q.type==='short' ? q.accepted.join(', ') : ""
+          accepted: q.type==='short' ? (q.accepted||[]).join(', ') : "",
+          acceptAll: q.type==='short' ? !!q.acceptAll : false
         };
         drawAdminPanel();
         window.scrollTo({top:0, behavior:'smooth'});
@@ -1142,7 +1242,6 @@ function drawQList(){
         if(!confirm('이 문제를 삭제할까요?')) return;
         adminBank.splice(idx,1);
         await saveBank(teacherCode, adminBank);
-        drawQList();
         drawAdminPanel();
       } else if(act === 'up' && idx > 0){
         [adminBank[idx-1], adminBank[idx]] = [adminBank[idx], adminBank[idx-1]];
