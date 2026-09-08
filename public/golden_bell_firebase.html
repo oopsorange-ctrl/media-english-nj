@@ -148,6 +148,9 @@
   .rank-score{ font-size:13px; color:var(--gold-soft); font-weight:800; }
 
   .footer-controls{ display:flex; justify-content:center; gap:14px; margin-top:26px; flex-wrap:wrap; }
+  .timer-choose-label{ text-align:center; font-size:13.5px; color:var(--slate); margin-top:24px; }
+  .timer-btn{ min-width:110px; font-size:17px; padding:16px 24px; margin-top:0; }
+  .timer-btn:disabled{ opacity:.35; }
 
   .podium-row{ display:flex; align-items:flex-end; gap:18px; justify-content:center; margin:36px 0; }
   .podium-card{ background:var(--navy); border:1px solid var(--line); border-radius:16px; padding:20px 22px; text-align:center; }
@@ -787,17 +790,26 @@ function renderHostReady(state){
     <div class="stage-grid ${withSidebar?'with-sidebar':''}">
       <div>
         ${questionPanelHtml(q, `${hostOptsPreviewHtml(q)}
-          <div class="footer-controls"><button class="primary-btn" id="startTimerBtn">⏱ 10초 카운트 시작</button></div>`)}
+          <p class="timer-choose-label">⏱ 제한 시간을 고르면 카운트가 시작됩니다${q.type==='short'?' <strong style="color:var(--gold-soft)">— 주관식은 20초 이상을 권해요</strong>':''}</p>
+          <div class="footer-controls">
+            <button class="primary-btn timer-btn" data-sec="10">10초</button>
+            <button class="primary-btn timer-btn" data-sec="20">20초</button>
+            <button class="primary-btn timer-btn" data-sec="30">30초</button>
+          </div>`)}
       </div>
       ${withSidebar ? `<div class="sidebar" id="sidebar"></div>` : ''}
     </div>`;
   if(withSidebar) renderSidebar();
-  document.getElementById('startTimerBtn').onclick = async () => {
-    ensureAudio();
-    const countdownEndAt = Date.now() + 10000;
-    await fSet('rooms/' + currentRoom + '/state', {phase:'countdown', qIndex: state.qIndex, countdownEndAt, teacherCode});
-    runHostCountdown(state.qIndex, countdownEndAt);
-  };
+  app.querySelectorAll('.timer-btn').forEach(btn => {
+    btn.onclick = async () => {
+      ensureAudio();
+      const sec = parseInt(btn.dataset.sec, 10);
+      app.querySelectorAll('.timer-btn').forEach(b => b.disabled = true);
+      const countdownEndAt = Date.now() + sec * 1000;
+      await fSet('rooms/' + currentRoom + '/state', {phase:'countdown', qIndex: state.qIndex, countdownEndAt, durationSec: sec, teacherCode});
+      runHostCountdown(state.qIndex, countdownEndAt);
+    };
+  });
 }
 
 function runHostCountdown(qIndex, countdownEndAt){
