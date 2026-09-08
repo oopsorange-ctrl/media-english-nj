@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>도전 골든벨 · Be Media Wise</title>
+<title>도전 골든벨 · Challenge Golden Bell in Classroom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -156,7 +156,7 @@
   .timer-btn{ min-width:110px; font-size:17px; padding:16px 24px; margin-top:0; }
   .timer-btn:disabled{ opacity:.35; }
 
-  .podium-row{ display:flex; align-items:flex-end; gap:18px; justify-content:center; margin:36px 0; }
+  .podium-row{ display:flex; align-items:flex-end; gap:18px; justify-content:center; margin:36px 0; flex-wrap:wrap; }
   .podium-card{ background:var(--navy); border:1px solid var(--line); border-radius:16px; padding:20px 22px; text-align:center; }
   .podium-card.p1{ order:2; padding-top:34px; border-color:var(--gold); box-shadow:0 0 30px rgba(244,196,48,.3); }
   .podium-card.p2{ order:1; } .podium-card.p3{ order:3; }
@@ -206,6 +206,20 @@
   .conn-pill{ position:fixed; top:10px; right:14px; font-size:11px; padding:4px 10px; border-radius:999px; background:var(--navy); border:1px solid var(--line); color:var(--slate); z-index:99; }
   .conn-pill.ok{ color:var(--green); border-color:var(--green); }
   .conn-pill.bad{ color:#FF8A94; border-color:var(--crimson); }
+  .dev-badge{
+    position:fixed; top:10px; left:14px; z-index:99;
+    font-size:11px; padding:4px 12px; border-radius:999px;
+    background:var(--navy); border:1px solid var(--line);
+    color:var(--gold-soft); font-weight:700; letter-spacing:.04em;
+  }
+  .tie-tag{
+    display:inline-block; background:rgba(244,196,48,.16); color:var(--gold);
+    font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:999px; margin-bottom:6px;
+  }
+  .tie-inline{
+    font-size:10.5px; color:var(--gold); background:rgba(244,196,48,.14);
+    padding:1px 6px; border-radius:999px; margin-left:6px; font-weight:800;
+  }
 
   .primary-btn, .ghost-btn, .small-btn, .danger-btn, .role-btn{ touch-action: manipulation; -webkit-tap-highlight-color: rgba(244,196,48,.25); }
 
@@ -222,6 +236,7 @@
 </head>
 <body>
 <div id="app"></div>
+<div class="dev-badge">Development by NJ</div>
 <div class="conn-pill" id="connPill">연결 확인 중...</div>
 
 <script>
@@ -426,8 +441,8 @@ function renderRoleSelect(){
         <div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-ring"></div>
         <div class="bell-icon">🔔</div>
       </div>
-      <p class="eyebrow">Challenge Golden Bell · Lesson 2</p>
-      <h1 class="title-lg">BE MEDIA WISE</h1>
+      <p class="eyebrow">Challenge Golden Bell in Classroom</p>
+      <h1 class="title-lg">도전 골든벨</h1>
       <p class="sub">이 화면이 누구의 화면인지 선택하세요</p>
       <div class="role-row">
         <button class="role-btn" id="btnStudent"><span class="ico">🎓</span>학생으로 참가</button>
@@ -762,8 +777,8 @@ function renderHostLobby(){
   app.innerHTML = `
     <div class="center" data-phase="lobby">
       <div class="bell-wrap"><div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-ring"></div><div class="bell-icon">🔔</div></div>
-      <p class="eyebrow">Challenge Golden Bell · Lesson 2 · 교사 코드 ${escapeHtml(teacherCode)}</p>
-      <h1 class="title-lg">BE MEDIA WISE</h1>
+      <p class="eyebrow">Challenge Golden Bell in Classroom · ${escapeHtml(teacherCode)} 선생님</p>
+      <h1 class="title-lg">도전 골든벨</h1>
       <div class="room-code-card">
         <div class="lbl">입장 코드</div>
         <div class="code">${escapeHtml(currentRoom)}</div>
@@ -949,33 +964,58 @@ async function renderHostReveal(state){
 function renderSidebar(){
   const el = document.getElementById('sidebar');
   if(!el) return;
-  const ranked = Object.entries(hostScores).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const ranked = computeRankings(hostScores).slice(0,7);
   el.innerHTML = `<h3>🏆 TOP 7</h3>` + (ranked.length ?
-    ranked.map(([name,score],i)=>`<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-name">${escapeHtml(name)}</span><span class="rank-score">${score}점</span></div>`).join('')
+    ranked.map(r=>`<div class="rank-row"><span class="rank-num">${r.rank}</span><span class="rank-name">${escapeHtml(r.name)}</span><span class="rank-score">${r.score}점</span></div>`).join('')
     : `<span class="empty-note">아직 점수가 없어요</span>`);
 }
 
+/* 표준 경쟁 순위(1224 방식): 동점자는 같은 순위, 다음 순위는 인원수만큼 건너뜀 */
+function computeRankings(scoresObj){
+  const sorted = Object.entries(scoresObj).sort((a,b)=>{
+    if(b[1] !== a[1]) return b[1] - a[1];
+    return a[0].localeCompare(b[0], 'ko', {numeric:true});
+  });
+  const out = [];
+  let lastScore = null, lastRank = 0;
+  sorted.forEach(([name,score], i) => {
+    let rank;
+    if(score === lastScore){ rank = lastRank; }
+    else { rank = i + 1; lastScore = score; lastRank = rank; }
+    out.push({name, score, rank});
+  });
+  // 각 순위별 인원수(공동 여부 판단용)
+  const counts = {};
+  out.forEach(r => { counts[r.rank] = (counts[r.rank]||0) + 1; });
+  out.forEach(r => { r.tied = counts[r.rank] > 1; });
+  return out;
+}
+
 function renderHostFinal(){
-  const ranked = Object.entries(hostScores).sort((a,b)=>b[1]-a[1]);
-  const top3 = ranked.slice(0,3);
-  const rest = ranked.slice(3);
-  const medals = ['🥇','🥈','🥉'];
+  const ranked = computeRankings(hostScores);
+  // 시상대: 1~3위에 해당하는 사람은 동점자 포함 전원 표시
+  const podium = ranked.filter(r => r.rank <= 3);
+  const rest = ranked.filter(r => r.rank > 3);
+  const medals = {1:'🥇', 2:'🥈', 3:'🥉'};
+  const rankWord = {1:'1위', 2:'2위', 3:'3위'};
+
   app.innerHTML = `
     <div class="center" style="min-height:auto;padding-top:20px;">
       <p class="eyebrow">Final Result · 코드 ${escapeHtml(currentRoom)}</p>
       <h1 class="title-lg">🎉 최종 순위 🎉</h1>
     </div>
     <div class="podium-row">
-      ${top3.map(([name,score],i)=>`
-        <div class="podium-card p${i+1}">
-          <span class="medal">${medals[i]}</span>
-          <p class="podium-name">${escapeHtml(name)}</p>
-          <p class="podium-score">${score}점</p>
+      ${podium.map(r=>`
+        <div class="podium-card p${r.rank}">
+          <span class="medal">${medals[r.rank]}</span>
+          ${r.tied ? `<span class="tie-tag">공동 ${rankWord[r.rank]}</span>` : ''}
+          <p class="podium-name">${escapeHtml(r.name)}</p>
+          <p class="podium-score">${r.score}점</p>
         </div>`).join('')}
     </div>
     <div class="sidebar" style="max-width:420px;margin:0 auto;">
       <h3>전체 순위</h3>
-      ${rest.length ? rest.map(([name,score],i)=>`<div class="rank-row"><span class="rank-num">${i+4}</span><span class="rank-name">${escapeHtml(name)}</span><span class="rank-score">${score}점</span></div>`).join('') : `<span class="empty-note">참가자가 3명 이하예요</span>`}
+      ${rest.length ? rest.map(r=>`<div class="rank-row"><span class="rank-num">${r.rank}</span><span class="rank-name">${escapeHtml(r.name)}${r.tied?'<span class="tie-inline">공동</span>':''}</span><span class="rank-score">${r.score}점</span></div>`).join('') : `<span class="empty-note">${ranked.length ? '모든 참가자가 시상대에 올랐어요' : '참가자가 없어요'}</span>`}
     </div>
     <div class="center" style="min-height:auto;">
       <button class="ghost-btn" id="backBtn">← 교사 화면으로 (새 수업 시작)</button>
