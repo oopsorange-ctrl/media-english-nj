@@ -156,10 +156,36 @@
   .timer-btn{ min-width:110px; font-size:17px; padding:16px 24px; margin-top:0; }
   .timer-btn:disabled{ opacity:.35; }
 
-  .podium-row{ display:flex; align-items:flex-end; gap:18px; justify-content:center; margin:36px 0; flex-wrap:wrap; }
-  .podium-card{ background:var(--navy); border:1px solid var(--line); border-radius:16px; padding:20px 22px; text-align:center; }
-  .podium-card.p1{ order:2; padding-top:34px; border-color:var(--gold); box-shadow:0 0 30px rgba(244,196,48,.3); }
-  .podium-card.p2{ order:1; } .podium-card.p3{ order:3; }
+  .podium-row{ display:flex; align-items:flex-end; gap:16px; justify-content:center; margin:36px 0; flex-wrap:wrap; }
+  .podium-card{
+    background:var(--navy); border:1px solid var(--line); border-radius:16px;
+    padding:20px 18px; text-align:center; box-sizing:border-box;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  }
+  /* 순위별 크기 고정 — 공동순위 뱃지 유무와 상관없이 항상 1위 > 2위 > 3위 */
+  .podium-card.p1{ order:2; width:168px; min-height:210px; padding-top:30px;
+    border-color:var(--gold); box-shadow:0 0 30px rgba(244,196,48,.3); }
+  .podium-card.p2{ order:1; width:146px; min-height:180px; }
+  .podium-card.p3{ order:3; width:128px; min-height:154px; }
+  .podium-card.p1 .medal{ font-size:42px; }
+  .podium-card.p2 .medal{ font-size:34px; }
+  .podium-card.p3 .medal{ font-size:29px; }
+  .podium-card.p1 .podium-name{ font-size:19px; }
+  .podium-card.p2 .podium-name{ font-size:16px; }
+  .podium-card.p3 .podium-name{ font-size:14.5px; }
+  .podium-card.p1 .podium-score{ font-size:15px; }
+  /* 뱃지 자리는 항상 확보해 카드 높이가 흔들리지 않게 한다 */
+  .tie-slot{ min-height:20px; display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
+  .recovery-bar{
+    position:fixed; left:0; right:0; bottom:0; z-index:200;
+    background:var(--crimson); color:#fff; padding:12px 16px;
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    font-size:14px; font-weight:700;
+  }
+  .recovery-bar button{
+    background:#fff; color:var(--crimson); border:none; border-radius:8px;
+    padding:8px 16px; font-weight:800; font-size:13.5px;
+  }
   .medal{ font-size:34px; margin-bottom:8px; display:block; }
   .podium-name{ font-size:16px; font-weight:900; margin-bottom:4px; }
   .podium-score{ font-size:13px; color:var(--slate); }
@@ -366,7 +392,17 @@ function playDing(){
 function fGet(path){ return db.ref(path).once('value').then(s => s.exists() ? s.val() : null); }
 function fSet(path, value){ return db.ref(path).set(value); }
 function fRemoveListener(ref){ if(ref) ref.off(); }
-function sanitizeKey(n){ return String(n).trim().replace(/[^a-zA-Z0-9가-힣]/g,'_').slice(0,40); }
+function sanitizeKey(n){
+  const raw = String(n).trim();
+  const k = raw.replace(/[^a-zA-Z0-9가-힣]/g,'_').slice(0,40);
+  // 전부 밑줄뿐이면 상위 노드를 통째로 덮어쓸 위험이 있어 원문 기반 고정 해시로 대체
+  if(k.replace(/_/g,'') === ''){
+    let h = 0;
+    for(let i=0;i<raw.length;i++){ h = (h*31 + raw.charCodeAt(i)) >>> 0; }
+    return 'u' + h.toString(36) + (k.length ? '_' + k.length : '');
+  }
+  return k;
+}
 function normalizeAnswer(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,''); }
 function genId(){ return 'q_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -401,6 +437,13 @@ function setUrlParam(name, value){
     window.history.replaceState(null, '', url.toString());
   }catch(e){}
 }
+function clearUrlParam(name){
+  try{
+    const url = new URL(window.location.href);
+    url.searchParams.delete(name);
+    window.history.replaceState(null, '', url.toString());
+  }catch(e){}
+}
 
 /* ============================ APP STATE ============================ */
 let role = null;
@@ -424,7 +467,28 @@ let countdownTickHandle = null;
 const app = document.getElementById('app');
 
 /* ============================ INIT ============================ */
-renderRoleSelect();
+// 시작: 주소에 방/이름이 남아 있으면 자동 재입장, 아니면 첫 화면
+(async () => {
+  try{
+    const rejoined = await tryAutoRejoin();
+    if(!rejoined) renderRoleSelect();
+  }catch(e){
+    renderRoleSelect();
+  }
+})();
+
+// 예기치 못한 오류로 화면이 멈추면 학생이 스스로 복구할 수 있게 한다
+window.addEventListener('error', () => showRecoveryBar());
+window.addEventListener('unhandledrejection', () => showRecoveryBar());
+function showRecoveryBar(){
+  if(document.getElementById('recoveryBar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'recoveryBar';
+  bar.className = 'recovery-bar';
+  bar.innerHTML = `<span>화면에 문제가 생겼어요.</span><button id="recoveryBtn">다시 연결</button>`;
+  document.body.appendChild(bar);
+  document.getElementById('recoveryBtn').onclick = () => location.reload();
+}
 
 function cleanupListeners(){
   fRemoveListener(stateListenerRef); stateListenerRef = null;
@@ -435,6 +499,7 @@ function cleanupListeners(){
 
 function renderRoleSelect(){
   cleanupListeners();
+  clearUrlParam('r'); clearUrlParam('n');
   app.innerHTML = `
     <div class="center">
       <div class="bell-wrap">
@@ -548,17 +613,55 @@ function renderStudentJoin(){
     const name = nameInput.value.trim();
     const err = document.getElementById('joinErr');
     if(!rc || !name){ err.textContent = '입장 코드와 이름을 모두 입력해주세요'; return; }
+    err.textContent = '입장하는 중...';
     const state = await fGet('rooms/' + rc + '/state');
     if(!state){ err.textContent = '입장 코드를 확인해주세요'; return; }
     ensureAudio();
-    currentRoom = rc; myName = name; teacherCode = state.teacherCode;
-    await fSet('rooms/' + rc + '/students/' + sanitizeKey(name), {name, joinedAt: Date.now()});
-    ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
-    startStudentListening();
+    await joinRoom(rc, name, state);
   };
   document.getElementById('joinBtn').onclick = go;
   document.getElementById('backBtn').onclick = renderRoleSelect;
   nameInput.addEventListener('keydown', e => { if(e.key==='Enter') go(); });
+}
+
+/* 동명이인이 서로를 덮어쓰지 않도록 고유한 표시 이름을 만든다 */
+async function resolveUniqueName(rc, name){
+  const existing = await fGet('rooms/' + rc + '/students') || {};
+  const takenKeys = Object.keys(existing);
+  const baseKey = sanitizeKey(name);
+  if(!takenKeys.includes(baseKey)) return name;
+  // 같은 이름으로 이미 들어와 있으면 (2), (3)... 을 붙인다
+  for(let n = 2; n <= 50; n++){
+    const candidate = `${name}(${n})`;
+    if(!takenKeys.includes(sanitizeKey(candidate))) return candidate;
+  }
+  return `${name}(${Math.floor(Math.random()*900+100)})`;
+}
+
+async function joinRoom(rc, name, state){
+  const uniqueName = await resolveUniqueName(rc, name);
+  currentRoom = rc; myName = uniqueName; teacherCode = state.teacherCode;
+  await fSet('rooms/' + rc + '/students/' + sanitizeKey(uniqueName), {name: uniqueName, joinedAt: Date.now()});
+  // 새로고침되거나 브라우저가 페이지를 날려도 자동으로 되돌아오게 주소에 남긴다
+  setUrlParam('r', rc);
+  setUrlParam('n', uniqueName);
+  ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
+  startStudentListening();
+}
+
+/* 페이지가 다시 열렸을 때(모바일에서 탭이 정리된 경우 등) 자동 재입장 */
+async function tryAutoRejoin(){
+  const rc = getUrlParam('r');
+  const nm = getUrlParam('n');
+  if(!rc || !nm) return false;
+  const state = await fGet('rooms/' + rc + '/state');
+  if(!state) return false;
+  role = 'student';
+  currentRoom = rc; myName = nm; teacherCode = state.teacherCode;
+  await fSet('rooms/' + rc + '/students/' + sanitizeKey(nm), {name: nm, joinedAt: Date.now()});
+  ACTIVE_QUESTIONS = await loadQuestions(teacherCode);
+  startStudentListening();
+  return true;
 }
 
 /* ============================ STUDENT: REAL-TIME GAME LOOP ============================ */
@@ -599,7 +702,10 @@ function renderStudentWaiting(msg){
       <div class="waiting-icon">⏳</div>
       <p class="sub" style="font-size:17px; color:var(--ivory); font-weight:700;">${escapeHtml(msg)}</p>
       <p class="status-pill">입장 코드 ${escapeHtml(currentRoom)} · 참가자: ${escapeHtml(myName)}</p>
+      <button class="ghost-btn" id="leaveBtn">나가기</button>
     </div>`;
+  const lb = document.getElementById('leaveBtn');
+  if(lb) lb.onclick = () => { clearUrlParam('r'); clearUrlParam('n'); location.reload(); };
 }
 
 function renderOptionsBlock(q, opts){
@@ -911,19 +1017,25 @@ function shortAnswerLabel(q){
 async function renderHostReveal(state){
   const q = ACTIVE_QUESTIONS[state.qIndex];
 
+  // 답안은 한 번만 읽는다 (인원이 많을수록 중복 읽기 비용이 커짐)
+  const answers = await fGet('rooms/' + currentRoom + '/answers/' + state.qIndex) || {};
+
+  // 락은 await 이전에 동기적으로 걸어야 리스너가 두 번 울려도 중복 채점되지 않는다
   if(!scoredQuestions.has(state.qIndex)){
-    const answers = await fGet('rooms/' + currentRoom + '/answers/' + state.qIndex) || {};
+    scoredQuestions.add(state.qIndex);
     for(const key in answers){
       const val = answers[key];
+      if(!val || !val.name) continue;
       if(!hostScores.hasOwnProperty(val.name)) hostScores[val.name] = 0;
       if(gradeQuestion(q, val)) hostScores[val.name] += q.points;
     }
-    scoredQuestions.add(state.qIndex);
-    await fSet('rooms/' + currentRoom + '/scores', hostScores);
+    fSet('rooms/' + currentRoom + '/scores', hostScores);
   }
 
-  const answers2 = await fGet('rooms/' + currentRoom + '/answers/' + state.qIndex) || {};
-  const correctNames = Object.values(answers2).filter(v => gradeQuestion(q, v)).map(v => v.name);
+  const correctNames = Object.values(answers)
+    .filter(v => v && v.name && gradeQuestion(q, v))
+    .map(v => v.name);
+
 
   const withSidebar = state.qIndex >= TOP7_FROM_INDEX;
   let revealBlock;
@@ -1008,7 +1120,7 @@ function renderHostFinal(){
       ${podium.map(r=>`
         <div class="podium-card p${r.rank}">
           <span class="medal">${medals[r.rank]}</span>
-          ${r.tied ? `<span class="tie-tag">공동 ${rankWord[r.rank]}</span>` : ''}
+          <div class="tie-slot">${r.tied ? `<span class="tie-tag">공동 ${rankWord[r.rank]}</span>` : ''}</div>
           <p class="podium-name">${escapeHtml(r.name)}</p>
           <p class="podium-score">${r.score}점</p>
         </div>`).join('')}
