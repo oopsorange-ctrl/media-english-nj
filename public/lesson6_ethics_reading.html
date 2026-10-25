@@ -66,8 +66,9 @@ header.top h1{font-size:19px;margin:0;color:var(--blue-d)}
 .prompt{font-size:19px;font-weight:700;margin-bottom:6px}
 .tray{min-height:62px;border:3px dashed var(--line);border-radius:14px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#f8fbff}
 .tray.answer{background:#fff;border-style:solid;border-color:var(--blue)}
-.chip{padding:10px 16px;border-radius:12px;background:var(--blue-l);border:2px solid var(--blue);font-size:18px;font-weight:700;color:var(--ink);min-height:46px}
+.chip{display:inline-flex;flex-direction:column;align-items:center;line-height:1.25;padding:8px 14px;border-radius:12px;background:var(--blue-l);border:2px solid var(--blue);font-size:18px;font-weight:700;color:var(--ink);min-height:46px}
 .chip:active{background:#c4dcf8}
+.chip .ko{font-size:13px;font-weight:600;color:var(--sub);margin-top:2px}
 .chip.bad{background:var(--bad-l);border-color:var(--bad)}
 .chip.good{background:var(--ok-l);border-color:var(--ok)}
 .fb{margin-top:10px;padding:10px 14px;border-radius:12px;font-weight:700}
@@ -87,8 +88,10 @@ textarea{width:100%;min-height:130px;font-family:inherit;font-size:19px;padding:
 textarea:focus,input.t:focus{outline:none;border-color:var(--blue)}
 input.t{font-family:inherit;font-size:20px;padding:12px;border:3px solid var(--line);border-radius:12px;width:100%;color:var(--ink)}
 .wordbank{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-.wchip{padding:6px 12px;border-radius:999px;background:#fff;border:2px solid var(--blue);color:var(--blue-d);font-weight:700;font-size:16px}
+.wchip{display:inline-flex;flex-direction:column;align-items:center;line-height:1.2;padding:6px 14px;border-radius:14px;background:#fff;border:2px solid var(--blue);color:var(--blue-d);font-weight:700;font-size:16px}
 .wchip:active{background:var(--blue-l)}
+.wchip .ko{font-size:12px;font-weight:600;color:var(--sub)}
+.kosum{background:var(--warn-l);border:2px solid var(--warn);border-radius:14px;padding:10px 14px;margin:8px 0;font-size:18px;font-weight:700}
 .check{display:flex;gap:8px;align-items:center;margin:4px 0;font-weight:700}
 .dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px;background:#e3e9f2;color:#fff}
 .dot.y{background:var(--ok)}
@@ -165,7 +168,21 @@ var S2 = [
   {id:"b3",type:"arrange",label:"비슷한 문장 3"}
 ];
 
-var WORDBANK = ["copyright","permission","credit","creators","location","address","reveal","privacy","should","check","before","posting"];
+var KO = {
+ "Tagging that location":"그 장소를 태그하는 것은","can unintentionally reveal":"의도치 않게 드러낼 수 있다","an exact address.":"정확한 주소를",
+ "Creators":"제작자들은","are encouraged":"권장된다","to review every detail":"모든 세부 사항을 검토하도록","that appears":"나타나는","in the background":"배경에","of their videos.":"자신의 영상의",
+ "Responsible creators":"책임감 있는 제작자는","pause to ask themselves":"잠시 멈춰 스스로에게 묻는다","whether they have":"~했는지","properly credited":"적절히 출처를 표기했는지","the original work.":"원작에",
+ "In such cases,":"이러한 경우에","the original creator":"원저작자는","has the right":"권리가 있다","to request":"요구할","that the content":"그 콘텐츠가","be taken down.":"내려지도록(삭제되도록)",
+ "Experts recommend":"전문가들은 권고한다","that users":"사용자들이","check the source":"출처를 확인하라고","before posting.":"게시하기 전에",
+ "The school demands":"학교는 요구한다","that the video":"그 영상이","be deleted":"삭제되도록","immediately.":"즉시",
+ "The creator requested":"제작자는 요청했다","that the location":"그 위치가","be hidden":"숨겨지도록","from viewers.":"시청자들에게서"
+};
+var WORDBANK = [
+ ["creators","제작자들"],["they","그들은"],["should","~해야 한다"],["should not","~하지 말아야 한다"],["can","~할 수 있다"],["and","그리고"],
+ ["ask for permission","허락을 구하다"],["give credit to","출처를 밝히다"],["the original work","원작"],["copyright","저작권"],
+ ["reveal","드러내다"],["their exact location","정확한 위치"],["address","주소"],["privacy","사생활"],
+ ["in videos","영상에서"],["before posting","게시하기 전에"],["check the source","출처를 확인하다"],["without","~ 없이"],["other people's rights","타인의 권리"],["safety","안전"]
+];
 
 /* ============ 상태 ============ */
 function freshState(){
@@ -558,7 +575,7 @@ function s2Arrange(body,item){
   var btnCheck = h("button",{class:"btn",text:"확인",disabled:"disabled"});
   var order = shuffle(data.chunks, 7+S.s2.i*13);
   var chips = order.map(function(t){
-    var chip = h("button",{class:"chip",text:t});
+    var chip = h("button",{class:"chip"},[h("span",{class:"en",text:t}),KO[t]?h("span",{class:"ko",text:KO[t]}):null]);
     chip.dataset.text = t; chip.dataset.where = "pool";
     chip.addEventListener("click",function(){
       if(locked) return;
@@ -658,16 +675,20 @@ function s3Analyze(t){
 function renderS3(){
   var card = h("div",{class:"card"},[
     h("h2",{text:"Step 4. 한 문장으로 요약하기"}),
-    h("p",{text:"지문 전체를 영어 한 문장으로 요약해 보세요. 저작권(copyright)과 위치 정보(location)로 인한 사생활 문제를 모두 담아야 해요."}),
-    h("p",{class:"muted",text:"종이 지문을 다시 보면서 쓰세요. 아래 단어를 눌러 넣어도 됩니다. 지문 문장을 그대로 베끼기보다 내 말로 줄여 보세요."})
+    h("p",{text:"지문 전체를 영어 한 문장으로 요약해 보세요. 저작권과 위치 정보(사생활) 문제를 모두 담아야 해요."}),
+    h("div",{class:"kosum",text:"우리말 요약: 제작자들은 원작자에게 허락을 구하고 출처를 밝혀야 하며, 영상에서 정확한 위치를 드러내지 않아야 한다."}),
+    h("p",{class:"muted",text:"위 우리말 요약을 영어로 바꿔 보세요. 아래 단어 상자를 누르면 영어 표현이 글칸에 들어갑니다. 직접 타이핑하거나 순서를 바꿔도 좋아요. 종이 지문을 참고하세요."})
   ]);
   var ta = h("textarea",{id:"s3t",placeholder:"여기에 영어로 써 보세요.",spellcheck:"false",autocapitalize:"off",autocomplete:"off"});
   ta.value = S.s3.text||"";
   ta.addEventListener("input",function(){ S.s3.text = ta.value; save(); updBtn(); });
   var bank = h("div",{class:"wordbank"});
-  WORDBANK.forEach(function(w){ bank.appendChild(h("button",{class:"wchip",text:w,onclick:function(){
-    var v = ta.value; ta.value = v + (v && !/\s$/.test(v)?" ":"") + w + " "; S.s3.text = ta.value; save(); updBtn(); ta.focus();
-  }})); });
+  WORDBANK.forEach(function(w){ bank.appendChild(h("button",{class:"wchip",onclick:function(){
+    var v = ta.value; ta.value = v + (v && !/\s$/.test(v)?" ":"") + w[0] + " "; S.s3.text = ta.value; save(); updBtn();
+  }},[h("span",{text:w[0]}),h("span",{class:"ko",text:w[1]})])); });
+  var btnUndo = h("button",{class:"btn ghost",text:"마지막 단어 지우기",onclick:function(){
+    var t = ta.value.replace(/\s+$/,""); var m = t.match(/^(.*\s)?(\S+)$/); ta.value = m ? (m[1]||"") : ""; S.s3.text = ta.value; save(); updBtn();
+  }});
   var res = h("div",{id:"s3res"});
   var btnCheck = h("button",{class:"btn ghost",text:"내 문장 점검하기"});
   var btnNext = h("button",{class:"btn ok",text:"수업 마치기"});
@@ -686,14 +707,14 @@ function renderS3(){
     line(a.a, a.a? "저작권 관련 내용이 들어 있어요" : "저작권(허락, 출처 표기 등) 이야기가 보이지 않아요");
     line(a.b, a.b? "위치 정보(사생활) 관련 내용이 들어 있어요" : "위치 정보(주소 노출 등) 이야기가 보이지 않아요");
     line(a.n>=8, a.n>=8? "문장 길이가 충분해요 ("+a.n+"단어)" : "조금 더 구체적으로 써 보세요 (지금 "+a.n+"단어)");
-    box.appendChild(h("div",{class:"ex"},[h("b",{text:"예시 문장 (정답은 하나가 아니에요) "}),document.createTextNode("Creators should ask for permission and give credit to the original work, and they should not reveal their exact location in videos.")]));
+    box.appendChild(h("div",{class:"ex"},[h("b",{text:"예시 문장 (정답은 하나가 아니에요) "}),document.createTextNode("Creators should ask for permission and give credit to the original work, and they should not reveal their exact location in videos. (제작자들은 원작에 대해 허락을 구하고 출처를 밝혀야 하며, 영상에서 정확한 위치를 드러내지 않아야 한다.)")]));
     box.appendChild(h("p",{class:"muted",text:"이 점검은 핵심 단어가 있는지만 봐요. 문장이 문법적으로 맞는지는 선생님이 나중에 확인합니다. 고치고 싶으면 고친 뒤 다시 점검할 수 있어요."}));
     res.appendChild(box);
     updBtn();
   });
   btnNext.addEventListener("click",function(){ S.submitted = true; S.doneAt = Date.now(); save(); render(); window.scrollTo(0,0); });
   card.appendChild(ta); card.appendChild(bank);
-  card.appendChild(h("div",{class:"row",style:"margin-top:8px"},[btnCheck,btnNext]));
+  card.appendChild(h("div",{class:"row",style:"margin-top:8px"},[btnUndo,btnCheck,btnNext]));
   card.appendChild(res);
   $app.appendChild(card);
   updBtn();
