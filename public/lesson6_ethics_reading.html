@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lesson 6 디지털 윤리 읽기 스터디</title>
+<style>
+:root{
+  --bg:#eef5fd; --card:#ffffff; --ink:#1d2b3f; --sub:#5b6b82;
+  --blue:#4a8fe7; --blue-d:#2f6fc4; --blue-l:#dcebfc; --line:#cfdff3;
+  --ok:#2e9d62; --ok-l:#dff4e8; --bad:#d9534f; --bad-l:#fde4e3; --warn:#f0a93b; --warn-l:#fff2d9;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:17px;line-height:1.5;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+textarea,input{-webkit-user-select:text;user-select:text}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:0}
+.wrap{max-width:1040px;margin:0 auto;padding:14px 16px 40px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+header.top h1{font-size:19px;margin:0;color:var(--blue-d)}
+.steps{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:6px 14px;border-radius:999px;background:#fff;border:2px solid var(--line);color:var(--sub);font-size:15px;font-weight:700}
+.pill.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.pill.done{background:var(--ok-l);border-color:var(--ok);color:var(--ok)}
+.timer{font-size:14px;color:var(--sub)}
+.card{background:var(--card);border-radius:18px;border:2px solid var(--line);padding:18px;margin-bottom:14px;box-shadow:0 3px 10px rgba(74,143,231,.08)}
+.card h2{margin:0 0 6px;font-size:20px}
+.card p{margin:6px 0}
+.muted{color:var(--sub);font-size:15px}
+.btn{background:var(--blue);color:#fff;padding:12px 22px;border-radius:12px;font-weight:700;min-height:48px}
+.btn:active{background:var(--blue-d)}
+.btn.ghost{background:#fff;color:var(--blue-d);border:2px solid var(--blue)}
+.btn.ok{background:var(--ok)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hidden{display:none!important}
+
+/* crossword */
+.cwlayout{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.gridbox{flex:0 0 auto}
+.grid{display:grid;gap:3px;background:transparent}
+.cell{width:var(--cs);height:var(--cs);border-radius:6px;background:transparent;position:relative;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(var(--cs)*.5);color:var(--ink)}
+.cell.f{background:#fff;border:2px solid #9bbbe6}
+.cell.inword{background:var(--blue-l)}
+.cell.sel{background:#ffe9a8;border-color:var(--warn)}
+.cell.bad{background:var(--bad-l);border-color:var(--bad);color:var(--bad)}
+.cell.hint{color:var(--blue-d);background:#eef3ff}
+.cell.right{background:var(--ok-l);border-color:var(--ok)}
+.cell .n{position:absolute;top:1px;left:3px;font-size:calc(var(--cs)*.25);font-weight:700;color:var(--sub);line-height:1}
+.cluepanel{flex:1 1 280px;min-width:260px}
+.curclue{background:var(--warn-l);border:2px solid var(--warn);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.curclue .k{font-weight:800}
+.curclue .sent{font-size:18px;margin-top:4px}
+.blank{display:inline-block;min-width:70px;border-bottom:3px solid var(--ink);margin:0 3px}
+.cluelist{max-height:220px;overflow:auto;border:2px solid var(--line);border-radius:12px}
+.clueitem{padding:8px 12px;border-bottom:1px solid var(--line);font-size:15px}
+.clueitem:last-child{border-bottom:0}
+.clueitem.cur{background:var(--blue-l)}
+.clueitem.done{color:var(--ok)}
+.kb{margin-top:12px;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.kbrow{display:flex;gap:5px;justify-content:center}
+.key{flex:1 1 0;min-width:0;max-width:52px;height:50px;padding:0;border-radius:10px;background:#fff;border:2px solid var(--line);font-weight:800;font-size:19px;color:var(--ink)}
+.key:active{background:var(--blue-l)}
+.key.wide{flex:0 0 76px;max-width:none;font-size:15px;background:var(--blue-l)}
+
+/* arrange */
+.prompt{font-size:19px;font-weight:700;margin-bottom:6px}
+.tray{min-height:62px;border:3px dashed var(--line);border-radius:14px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#f8fbff}
+.tray.answer{background:#fff;border-style:solid;border-color:var(--blue)}
+.chip{padding:10px 16px;border-radius:12px;background:var(--blue-l);border:2px solid var(--blue);font-size:18px;font-weight:700;color:var(--ink);min-height:46px}
+.chip:active{background:#c4dcf8}
+.chip.bad{background:var(--bad-l);border-color:var(--bad)}
+.chip.good{background:var(--ok-l);border-color:var(--ok)}
+.fb{margin-top:10px;padding:10px 14px;border-radius:12px;font-weight:700}
+.fb.ok{background:var(--ok-l);color:#1f7a49}
+.fb.bad{background:var(--bad-l);color:#a93a37}
+.fb.info{background:var(--warn-l);color:#8a5a00}
+.choices{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.choices .btn{min-width:96px}
+.explain{background:#f4f9ff;border-left:6px solid var(--blue);padding:12px 16px;border-radius:10px;margin:10px 0}
+.explain b.em{color:var(--blue-d)}
+.ex{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;font-size:17px}
+.prog{height:10px;background:#fff;border:2px solid var(--line);border-radius:999px;overflow:hidden;margin:0 0 12px}
+.prog i{display:block;height:100%;background:var(--blue);width:0;transition:width .3s}
+
+/* step 3 */
+textarea{width:100%;min-height:130px;font-family:inherit;font-size:19px;padding:12px;border:3px solid var(--line);border-radius:14px;resize:vertical;color:var(--ink)}
+textarea:focus,input.t:focus{outline:none;border-color:var(--blue)}
+input.t{font-family:inherit;font-size:20px;padding:12px;border:3px solid var(--line);border-radius:12px;width:100%;color:var(--ink)}
+.wordbank{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.wchip{padding:6px 12px;border-radius:999px;background:#fff;border:2px solid var(--blue);color:var(--blue-d);font-weight:700;font-size:16px}
+.wchip:active{background:var(--blue-l)}
+.check{display:flex;gap:8px;align-items:center;margin:4px 0;font-weight:700}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px;background:#e3e9f2;color:#fff}
+.dot.y{background:var(--ok)}
+.dot.n{background:var(--warn)}
+.field{margin:10px 0}
+.field label{display:block;font-weight:700;margin-bottom:4px}
+.clock{display:inline-block;margin:6px 0 12px;padding:6px 16px;border-radius:999px;background:#fff;border:2px solid var(--ok);color:var(--ok);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.conf{animation:pop 1.6s ease-in-out infinite alternate;transform-origin:160px 120px}
+@keyframes pop{from{transform:scale(.96)}to{transform:scale(1.05)}}
+@media (max-width:700px){ .wrap{padding:10px} .key{height:46px;font-size:17px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Lesson 6 · 디지털 윤리 읽기 스터디</h1>
+    <div class="steps" id="pills"></div>
+    <div class="timer" id="timer"></div>
+  </header>
+  <div id="app"></div>
+</div>
+
+<script>
+/* ============ 설정 ============ */
+var LS_KEY = "l6eth_v2";
+var GUIDE_MIN = {1:10, 2:10, 3:12, 4:8};
+
+/* ============ 콘텐츠 ============ */
+var CW = {
+  rows:10, cols:11,
+  grid:[
+    "..R.......P",
+    "..E.P..C..E",
+    "..V.R..O..R",
+    "CREDIT.P..M",
+    "R.A.V..Y..I",
+    "E.L.ADDRESS",
+    "A...C..I..S",
+    "T...Y..G..I",
+    "O......H..O",
+    "R..LOCATION"
+  ],
+  entries:[
+    {n:1,dir:"D",word:"REVEAL",r:0,c:2,ko:"드러내다, 밝히다",s:"Tagging a place can unintentionally ___ an exact address."},
+    {n:2,dir:"D",word:"PERMISSION",r:0,c:10,ko:"허락, 허가",s:"Using another person's work without asking for ___ may break the law."},
+    {n:3,dir:"D",word:"PRIVACY",r:1,c:4,ko:"사생활",s:"The second issue concerns ___."},
+    {n:4,dir:"D",word:"COPYRIGHT",r:1,c:7,ko:"저작권",s:"The first issue concerns ___."},
+    {n:5,dir:"A",word:"CREDIT",r:3,c:0,ko:"출처 표기, 공을 인정함",s:"It is important to give proper ___ to the original work."},
+    {n:5,dir:"D",word:"CREATOR",r:3,c:0,ko:"제작자, 창작자",s:"The original ___ has the right to request that the content be taken down."},
+    {n:6,dir:"A",word:"ADDRESS",r:5,c:4,ko:"주소",s:"A tag can show an exact ___ rather than a general area."},
+    {n:7,dir:"A",word:"LOCATION",r:9,c:3,ko:"위치, 장소",s:"The unintended disclosure of ___ information is a privacy risk."}
+  ]
+};
+
+var ARR = {
+  w1:{chunks:["Tagging that location","can unintentionally reveal","an exact address."]},
+  w2:{chunks:["Creators","are encouraged","to review every detail","that appears","in the background","of their videos."]},
+  w3:{chunks:["Responsible creators","pause to ask themselves","whether they have","properly credited","the original work."]},
+  key:{chunks:["In such cases,","the original creator","has the right","to request","that the content","be taken down."]},
+  b1:{chunks:["Experts recommend","that users","check the source","before posting."]},
+  b2:{chunks:["The school demands","that the video","be deleted","immediately."]},
+  b3:{chunks:["The creator requested","that the location","be hidden","from viewers."]}
+};
+
+var S2 = [
+  {id:"w1",type:"arrange",label:"워밍업 1"},
+  {id:"w2",type:"arrange",label:"워밍업 2"},
+  {id:"w3",type:"arrange",label:"워밍업 3"},
+  {id:"hook",type:"hook"},
+  {id:"explain",type:"explain"},
+  {id:"key",type:"arrange",label:"지문 속 문장",key:true},
+  {id:"b1",type:"arrange",label:"비슷한 문장 1"},
+  {id:"b2",type:"arrange",label:"비슷한 문장 2"},
+  {id:"b3",type:"arrange",label:"비슷한 문장 3"}
+];
+
+var WORDBANK = ["copyright","permission","credit","creators","location","address","reveal","privacy","should","check","before","posting"];
+
+/* ============ 상태 ============ */
+function freshState(){
+  return {step:0, sec:{1:0,2:0,3:0,4:0}, startedAt:Date.now(),
+    cw:{letters:{},hints:{},hintCount:0,done:false},
+    rc:{i:0,first:{},tries:{}},
+    s2:{i:0,first:{},tries:{},gaveUp:{},hook:null,hookTries:0},
+    s3:{text:"",checks:0,lastText:""},
+    sid:"",name:"",submitted:false};
+}
+var S = freshState();
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{ var j = localStorage.getItem(LS_KEY); if(j){ var o = JSON.parse(j); if(o && o.cw && o.s2 && o.s3 && o.rc) S = o; } }catch(e){}
+}
+load();
+
+/* ============ 공통 ============ */
+var $app = document.getElementById("app");
+function h(tag, attrs, kids){
+  var e = document.createElement(tag);
+  if(attrs) for(var k in attrs){
+    if(k==="class") e.className = attrs[k];
+    else if(k==="text") e.textContent = attrs[k];
+    else if(k.indexOf("on")===0) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  (kids||[]).forEach(function(c){ if(c==null) return; e.appendChild(typeof c==="string"?document.createTextNode(c):c); });
+  return e;
+}
+function fmt(sec){ var m=Math.floor(sec/60), s=sec%60; return m+":"+(s<10?"0":"")+s; }
+function shuffle(a, seed){
+  var r = a.map(function(x,i){return [x,i];});
+  var s = seed||1;
+  function rnd(){ s = (s*9301+49297)%233280; return s/233280; }
+  for(var i=r.length-1;i>0;i--){ var j=Math.floor(rnd()*(i+1)); var t=r[i]; r[i]=r[j]; r[j]=t; }
+  var out = r.map(function(p){return p[0];});
+  if(out.join("|")===a.join("|") && a.length>1){ out.push(out.shift()); }
+  return out;
+}
+function drawPills(){
+  var P = document.getElementById("pills"); P.innerHTML = "";
+  [["1","단어 퍼즐"],["2","내용 확인"],["3","문장 만들기"],["4","요약하기"]].forEach(function(p,i){
+    var n = i+1, cls = "pill";
+    if(S.submitted || S.step>n) cls += " done"; else if(S.step===n) cls += " on";
+    P.appendChild(h("span",{class:cls,text:"Step "+n+" "+p[1]}));
+  });
+}
+function drawTimer(){
+  var T = document.getElementById("timer");
+  if(S.step>=1 && S.step<=4 && !S.submitted){
+    var g = GUIDE_MIN[S.step];
+    T.textContent = "이 단계 " + fmt(S.sec[S.step]) + " (권장 " + g + "분)";
+  } else T.textContent = "";
+}
+setInterval(function(){
+  if(document.hidden) return;
+  if(S.step>=1 && S.step<=4 && !S.submitted){ S.sec[S.step]++; drawTimer(); if(S.sec[S.step]%10===0) save(); }
+}, 1000);
+
+function go(step){ S.step = step; save(); render(); window.scrollTo(0,0); }
+
+function render(){
+  drawPills(); drawTimer();
+  $app.innerHTML = "";
+  if(S.submitted) return renderDone();
+  if(S.step===0) return renderIntro();
+  if(S.step===1) return renderCW();
+  if(S.step===2) return renderRC();
+  if(S.step===3) return renderS2();
+  if(S.step===4) return renderS3();
+}
+
+/* ============ 시작 화면 ============ */
+function renderIntro(){
+  var resume = (S.cw.done || S.sec[1]>0 || S.sec[2]>0 || S.sec[3]>0);
+  var c = h("div",{class:"card"},[
+    h("h2",{text:"오늘의 활동"}),
+    h("p",{text:"종이 지문(Lesson 6 추가 읽기 자료)을 옆에 두고, 혼자 힘으로 공부합니다. 선생님은 설명하지 않아요. 지문이 가장 좋은 선생님입니다."}),
+    h("p",{class:"muted",text:"Step 1 단어 퍼즐 (약 10분) → Step 2 내용 확인 (약 10분) → Step 3 문장 만들기 (약 12분) → Step 4 요약하기 (약 8분)"}),
+    h("p",{class:"muted",text:"중간에 화면을 새로고침하거나 실수로 닫아도 같은 태블릿에서는 진행 상황이 남아 있습니다."}),
+    h("div",{class:"row"},[
+      h("button",{class:"btn",text:resume?"이어서 하기":"시작하기",onclick:function(){ go(S.step>0?S.step:1); }}),
+      resume ? h("button",{class:"btn ghost",text:"처음부터 다시",onclick:function(){ if(confirm("지금까지의 진행이 모두 지워집니다. 계속할까요?")){ S=freshState(); save(); go(1);} }}) : null
+    ])
+  ]);
+  $app.appendChild(c);
+}
+
+/* ============ Step 1: 크로스워드 ============ */
+var cwSel = null; // {r,c,dir}
+var cwCells = {}; // "r,c" -> element
+var cwEntryCells = []; // per entry: array of keys
+function cwKey(r,c){ return r+","+c; }
+function cwInit(){
+  cwEntryCells = CW.entries.map(function(e){
+    var ks=[]; for(var i=0;i<e.word.length;i++) ks.push(e.dir==="A"?cwKey(e.r,e.c+i):cwKey(e.r+i,e.c)); return ks;
+  });
+}
+cwInit();
+function cwEntryAt(key, dir){
+  for(var i=0;i<CW.entries.length;i++){ if(CW.entries[i].dir===dir && cwEntryCells[i].indexOf(key)>=0) return i; }
+  return -1;
+}
+function renderCW(){
+  var cs = Math.min(52, Math.floor((Math.min(window.innerWidth,1040)-40)/ (CW.cols) ) - 3);
+  if(window.innerWidth>760) cs = 44;
+  var grid = h("div",{class:"grid",id:"cwgrid"});
+  grid.style.gridTemplateColumns = "repeat("+CW.cols+", var(--cs))";
+  grid.style.setProperty("--cs", cs+"px");
+  cwCells = {};
+  var nums = {}; CW.entries.forEach(function(e){ nums[cwKey(e.r,e.c)] = e.n; });
+  for(var r=0;r<CW.rows;r++) for(var c=0;c<CW.cols;c++){
+    var ch = CW.grid[r][c], k = cwKey(r,c);
+    var el = h("div",{class:"cell"+(ch!=="."?" f":"")});
+    if(ch!=="."){
+      if(nums[k]) el.appendChild(h("span",{class:"n",text:String(nums[k])}));
+      el.appendChild(h("span",{class:"L"}));
+      (function(rr,cc){ el.addEventListener("click",function(){ cwTap(rr,cc); }); })(r,c);
+    }
+    cwCells[k] = el; grid.appendChild(el);
+  }
+  var cur = h("div",{class:"curclue",id:"curclue"});
+  var list = h("div",{class:"cluelist",id:"cluelist"});
+  CW.entries.forEach(function(e,i){
+    var it = h("div",{class:"clueitem",id:"ci"+i,onclick:function(){ var k=cwEntryCells[i][0]; cwSel={r:e.r,c:e.c,dir:e.dir}; cwPaint(); }});
+    it.textContent = e.n+" "+(e.dir==="A"?"가로":"세로")+" · "+e.ko+" ("+e.word.length+"글자)";
+    list.appendChild(it);
+  });
+  var kb = h("div",{class:"kb"});
+  ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].forEach(function(rowStr,ri){
+    var row = h("div",{class:"kbrow"});
+    rowStr.split("").forEach(function(L){ row.appendChild(h("button",{class:"key",text:L,onclick:function(){ cwType(L); }})); });
+    if(ri===2) row.appendChild(h("button",{class:"key wide",text:"지우기",onclick:cwBack}));
+    kb.appendChild(row);
+  });
+  var tools = h("div",{class:"row",style:"margin-top:10px"},[
+    h("button",{class:"btn ghost",text:"힌트 (글자 하나 열기)",onclick:cwHint}),
+    h("button",{class:"btn ghost",text:"틀린 칸 확인",onclick:cwCheck}),
+    h("span",{class:"muted",id:"hintinfo"})
+  ]);
+  var left = h("div",{class:"gridbox"},[grid]);
+  var right = h("div",{class:"cluepanel"},[cur,list,kb,tools]);
+  var card = h("div",{class:"card"},[
+    h("h2",{text:"Step 1. 단어 크로스워드"}),
+    h("p",{class:"muted",text:"종이 지문에서 단어를 찾아 칸을 채우세요. 칸을 누르면 가로/세로가 바뀝니다. 빈칸 문장은 지문에서 따온 거예요."}),
+    h("div",{class:"cwlayout"},[left,right])
+  ]);
+  var nextBox = h("div",{class:"card hidden",id:"cwnext"},[
+    h("div",{class:"fb ok",text:"모두 맞혔어요! 지문 속 핵심 단어를 다 찾았습니다."}),
+    h("div",{class:"row",style:"margin-top:10px"},[ h("button",{class:"btn ok",text:"Step 2로 가기",onclick:function(){ go(2); }}) ])
+  ]);
+  $app.appendChild(card); $app.appendChild(nextBox);
+  cwSel = {r:CW.entries[0].r,c:CW.entries[0].c,dir:"D"};
+  var first = S.cw.done ? null : cwFirstEmpty();
+  if(first) cwSel = first;
+  cwPaint();
+}
+function cwFirstEmpty(){
+  for(var i=0;i<CW.entries.length;i++){
+    for(var j=0;j<cwEntryCells[i].length;j++){
+      var k = cwEntryCells[i][j];
+      if(!S.cw.letters[k]){ var p=k.split(","); return {r:+p[0],c:+p[1],dir:CW.entries[i].dir}; }
+    }
+  }
+  return null;
+}
+function cwTap(r,c){
+  var k = cwKey(r,c);
+  var a = cwEntryAt(k,"A"), d = cwEntryAt(k,"D");
+  if(cwSel && cwSel.r===r && cwSel.c===c){
+    if(a>=0 && d>=0) cwSel.dir = cwSel.dir==="A"?"D":"A";
+  } else {
+    var dir = cwSel? cwSel.dir : "A";
+    if(dir==="A" && a<0) dir="D"; else if(dir==="D" && d<0) dir="A";
+    cwSel = {r:r,c:c,dir:dir};
+  }
+  cwPaint();
+}
+function cwCurEntry(){ return cwEntryAt(cwKey(cwSel.r,cwSel.c), cwSel.dir); }
+function cwPaint(){
+  var ei = cwCurEntry();
+  var selKey = cwKey(cwSel.r,cwSel.c);
+  for(var k in cwCells){
+    var el = cwCells[k]; if(!el.classList.contains("f")) continue;
+    el.classList.toggle("inword", ei>=0 && cwEntryCells[ei].indexOf(k)>=0);
+    el.classList.toggle("sel", k===selKey);
+    el.querySelector(".L").textContent = S.cw.letters[k]||"";
+    el.classList.toggle("hint", !!S.cw.hints[k]);
+  }
+  var cur = document.getElementById("curclue");
+  if(cur){
+    cur.innerHTML = "";
+    if(ei>=0){
+      var e = CW.entries[ei];
+      cur.appendChild(h("div",{class:"k",text:e.n+" "+(e.dir==="A"?"가로":"세로")+" · "+e.ko+" ("+e.word.length+"글자)"}));
+      var sent = h("div",{class:"sent"});
+      var parts = e.s.split("___");
+      sent.appendChild(document.createTextNode(parts[0]));
+      sent.appendChild(h("span",{class:"blank"}));
+      sent.appendChild(document.createTextNode(parts[1]||""));
+      cur.appendChild(sent);
+    }
+  }
+  CW.entries.forEach(function(e,i){
+    var it = document.getElementById("ci"+i); if(!it) return;
+    var ok = cwEntryCells[i].every(function(k){ return S.cw.letters[k]===CW.grid[+k.split(",")[0]][+k.split(",")[1]]; });
+    it.classList.toggle("cur", i===ei);
+    it.classList.toggle("done", ok);
+  });
+  var hi = document.getElementById("hintinfo"); if(hi) hi.textContent = S.cw.hintCount? "힌트 사용 "+S.cw.hintCount+"회":"";
+}
+function cwNextCell(back){
+  var ei = cwCurEntry(); if(ei<0) return;
+  var ks = cwEntryCells[ei], i = ks.indexOf(cwKey(cwSel.r,cwSel.c)); var j = i+(back?-1:1);
+  if(j>=0 && j<ks.length){ var p=ks[j].split(","); cwSel.r=+p[0]; cwSel.c=+p[1]; }
+}
+function cwType(L){
+  if(S.cw.done) return;
+  var k = cwKey(cwSel.r,cwSel.c);
+  if(S.cw.hints[k]){ cwNextCell(false); cwPaint(); return; }
+  S.cw.letters[k] = L;
+  cwCells[k].classList.remove("bad");
+  cwNextCell(false); save(); cwPaint(); cwCheckDone();
+}
+function cwBack(){
+  if(S.cw.done) return;
+  var k = cwKey(cwSel.r,cwSel.c);
+  if(S.cw.letters[k] && !S.cw.hints[k]){ delete S.cw.letters[k]; }
+  else { cwNextCell(true); var k2 = cwKey(cwSel.r,cwSel.c); if(!S.cw.hints[k2]) delete S.cw.letters[k2]; }
+  for(var q in cwCells) cwCells[q].classList.remove("bad");
+  save(); cwPaint();
+}
+function cwHint(){
+  if(S.cw.done) return;
+  var k = cwKey(cwSel.r,cwSel.c), p = k.split(",");
+  var sol = CW.grid[+p[0]][+p[1]];
+  if(S.cw.hints[k]) return;
+  S.cw.letters[k] = sol; S.cw.hints[k] = 1; S.cw.hintCount++;
+  save(); cwPaint(); cwCheckDone();
+}
+function cwCheck(){
+  var bad = 0;
+  for(var k in S.cw.letters){
+    var p = k.split(","), sol = CW.grid[+p[0]][+p[1]];
+    if(S.cw.letters[k]!==sol){ cwCells[k].classList.add("bad"); bad++; }
+  }
+  var hi = document.getElementById("hintinfo");
+  if(hi) hi.textContent = bad? ("틀린 칸 "+bad+"개를 빨갛게 표시했어요") : "지금까지 쓴 칸은 모두 맞아요";
+}
+function cwCheckDone(){
+  for(var r=0;r<CW.rows;r++) for(var c=0;c<CW.cols;c++){
+    var ch = CW.grid[r][c]; if(ch===".") continue;
+    if(S.cw.letters[cwKey(r,c)]!==ch) return false;
+  }
+  S.cw.done = true; save();
+  for(var k in cwCells) if(cwCells[k].classList.contains("f")) cwCells[k].classList.add("right");
+  document.getElementById("cwnext").classList.remove("hidden");
+  document.getElementById("cwnext").scrollIntoView({behavior:"smooth",block:"center"});
+  return true;
+}
+document.addEventListener("keydown",function(ev){
+  if(S.step!==1 || S.submitted || !cwSel) return;
+  if(ev.ctrlKey||ev.metaKey||ev.altKey) return;
+  if(/^[a-zA-Z]$/.test(ev.key)) cwType(ev.key.toUpperCase());
+  else if(ev.key==="Backspace") cwBack();
+  else if(ev.key==="Tab"){ ev.preventDefault(); cwTap(cwSel.r,cwSel.c); }
+});
+
+
+/* ============ Step 2: 내용 확인 (문단 · 근거 · 바꿔 쓰기) ============ */
+var HEADS = ["숏폼 제작은 쉬워졌지만 책임도 따른다","저작권 침해와 원저작자의 권리","위치 정보 노출과 사생활 위험","창의성과 인기보다 타인의 권리와 안전이 먼저다"];
+var RC = [
+  {id:"m1",type:"mc",part:"A. 문단 중심 내용",q:"문단 1의 중심 내용은?",opts:HEADS,ans:0,why:"문단 1은 숏폼을 누구나 만들 수 있게 되었고, 그만큼 책임이 따른다는 도입 문단이에요."},
+  {id:"m2",type:"mc",part:"A. 문단 중심 내용",q:"문단 2의 중심 내용은?",opts:HEADS,ans:1,why:"문단 2는 안무, 삽화 같은 창작물도 저작권 대상이고, 원저작자는 내려 달라고 요구할 수 있다는 내용이에요."},
+  {id:"m3",type:"mc",part:"A. 문단 중심 내용",q:"문단 3의 중심 내용은?",opts:HEADS,ans:2,why:"문단 3은 장소 태그가 정확한 주소를 드러내 제작자가 불안해질 수 있다는 내용이에요."},
+  {id:"m4",type:"mc",part:"A. 문단 중심 내용",q:"문단 4의 중심 내용은?",opts:HEADS,ans:3,why:"문단 4는 두 문제를 묶어 정리하는 결론 문단이에요."},
+  {id:"t1",type:"tf",part:"B. 맞다 틀리다 + 근거 찾기",q:"Only music and films can be protected by copyright.",tf:false,para:2,why:"문단 2: 춤 안무, 삽화, 편집 스타일도 지적 재산이 될 수 있어요."},
+  {id:"t2",type:"tf",part:"B. 맞다 틀리다 + 근거 찾기",q:"Copying someone's dance without permission can break copyright law, even if no money is involved.",tf:true,para:2,why:"문단 2: even if no money is involved 부분을 확인해요."},
+  {id:"t3",type:"tf",part:"B. 맞다 틀리다 + 근거 찾기",q:"Tagging a café can show an exact address instead of a general area.",tf:true,para:3,why:"문단 3: an exact address rather than a general area"},
+  {id:"t4",type:"tf",part:"B. 맞다 틀리다 + 근거 찾기",q:"The writer says creators should do anything to become popular.",tf:false,para:4,why:"문단 4: popularity should never come at the cost of someone else's rights or safety"},
+  {id:"t5",type:"tf",part:"B. 맞다 틀리다 + 근거 찾기",q:"Viewers who find the exact place may make the creator feel unsafe.",tf:true,para:3,why:"문단 3: make the creator feel unsafe or uncomfortable"},
+  {id:"p1",type:"mc",part:"C. 바꿔 쓰기 (뜻이 가장 가까운 것)",q:"지문의 take down(내리다)과 뜻이 가장 가까운 것은?",opts:["removed","recorded","shared","published"],ans:0,why:"take down은 내리다, 삭제하다. remove와 비슷해요."},
+  {id:"p2",type:"mc",part:"C. 바꿔 쓰기 (뜻이 가장 가까운 것)",q:"지문의 unintentionally와 뜻이 가장 가까운 것은?",opts:["on purpose","by accident","very quickly","honestly"],ans:1,why:"unintentionally는 의도하지 않고, 즉 우연히."},
+  {id:"p3",type:"mc",part:"C. 바꿔 쓰기 (뜻이 가장 가까운 것)",q:"지문의 an exact address에서 exact와 뜻이 가장 가까운 것은?",opts:["precise","famous","nearby","general"],ans:0,why:"exact는 정확한. precise와 비슷하고, general은 반대에 가까워요."},
+  {id:"p4",type:"mc",part:"C. 바꿔 쓰기 (뜻이 가장 가까운 것)",q:"obtain permission in advance와 뜻이 가장 가까운 것은?",opts:["get approval before using it","pay money after using it","ask viewers to like it","copy it and give credit later"],ans:0,why:"in advance는 미리, obtain permission은 허락을 얻다."}
+];
+function renderRC(){
+  var i = S.rc.i, it = RC[i], total = RC.length;
+  var bar = h("div",{class:"prog"},[h("i")]); bar.firstChild.style.width = Math.round(i/total*100)+"%";
+  $app.appendChild(h("div",{class:"card"},[
+    h("h2",{text:"Step 2. 내용 확인"}),
+    h("p",{class:"muted",text:"종이 지문을 다시 읽으면서 풀어요. 문단 번호는 종이 지문 위에서부터 1, 2, 3, 4입니다. ("+(i+1)+" / "+total+")"}),
+    bar, h("div",{id:"rcbody"})
+  ]));
+  var body = document.getElementById("rcbody");
+  body.appendChild(h("div",{class:"prompt",text:it.part}));
+  if(it.type==="mc") rcMC(body,it); else rcTF(body,it);
+}
+function rcNext(){ S.rc.i++; save(); if(S.rc.i>=RC.length) go(3); else render(); }
+function rcRecord(it,ok){
+  S.rc.tries[it.id] = (S.rc.tries[it.id]||0)+1;
+  if(S.rc.first[it.id]===undefined) S.rc.first[it.id] = ok && S.rc.tries[it.id]===1;
+  save();
+}
+function rcDone(fb,it,msg){
+  fb.innerHTML="";
+  fb.appendChild(h("div",{class:"fb ok",text:msg}));
+  fb.appendChild(h("div",{class:"muted",style:"margin:6px 2px",text:it.why}));
+  fb.appendChild(h("div",{class:"row",style:"margin-top:8px"},[h("button",{class:"btn ok",text:"다음",onclick:rcNext})]));
+}
+function rcMC(body,it){
+  body.appendChild(h("div",{class:it.q.indexOf("지문의")===0?"ex":"ex",text:it.q}));
+  var fb = h("div",{id:"fb"}), box = h("div",{class:"choices",style:"flex-direction:column;align-items:stretch"});
+  var order = it.opts.map(function(t,idx){return {t:t,idx:idx};});
+  order = shuffle(order.map(function(o){return o.idx+"|"+o.t;}), 3+S.rc.i*5).map(function(x){var q=x.split("|");return {idx:+q[0],t:q.slice(1).join("|")};});
+  var locked=false;
+  order.forEach(function(o){
+    var b = h("button",{class:"btn ghost",text:o.t,style:"text-align:left"});
+    b.addEventListener("click",function(){
+      if(locked) return;
+      var ok = o.idx===it.ans; rcRecord(it,ok);
+      if(ok){ locked=true; b.classList.remove("ghost"); b.classList.add("ok"); rcDone(fb,it,"정답!"); }
+      else { b.setAttribute("disabled","disabled"); fb.innerHTML=""; fb.appendChild(h("div",{class:"fb bad",text:"아니에요. 지문에서 다시 확인해 보세요."}));
+        if(S.rc.tries[it.id]>=2) fb.appendChild(h("div",{class:"muted",style:"margin:6px 2px",text:"힌트: "+it.why}));
+      }
+    });
+    box.appendChild(b);
+  });
+  body.appendChild(box); body.appendChild(fb);
+}
+function rcTF(body,it){
+  body.appendChild(h("div",{class:"ex",text:it.q}));
+  var fb = h("div",{id:"fb"});
+  var tfv=null, pv=null, locked=false;
+  var r1 = h("div",{class:"choices"}), r2 = h("div",{class:"choices"});
+  var btnT = h("button",{class:"btn ghost",text:"True (맞다)"}), btnF = h("button",{class:"btn ghost",text:"False (틀리다)"});
+  function mark(group,sel){ Array.prototype.forEach.call(group.children,function(c){ c.classList.toggle("ghost",c!==sel); }); }
+  btnT.addEventListener("click",function(){ if(locked) return; tfv=true; mark(r1,btnT); upd(); });
+  btnF.addEventListener("click",function(){ if(locked) return; tfv=false; mark(r1,btnF); upd(); });
+  r1.appendChild(btnT); r1.appendChild(btnF);
+  [1,2,3,4].forEach(function(n){
+    var b = h("button",{class:"btn ghost",text:"문단 "+n});
+    b.addEventListener("click",function(){ if(locked) return; pv=n; mark(r2,b); upd(); });
+    r2.appendChild(b);
+  });
+  var go_ = h("button",{class:"btn",text:"확인",disabled:"disabled"});
+  function upd(){ if(tfv!==null && pv!==null) go_.removeAttribute("disabled"); }
+  go_.addEventListener("click",function(){
+    var ok = (tfv===it.tf && pv===it.para); rcRecord(it,ok);
+    if(ok){ locked=true; go_.classList.add("hidden"); rcDone(fb,it,"정답! 근거도 정확하게 찾았어요."); }
+    else {
+      fb.innerHTML="";
+      var m = tfv!==it.tf ? "True / False 판단을 다시 생각해 보세요." : "판단은 맞아요. 근거가 있는 문단을 다시 찾아보세요.";
+      fb.appendChild(h("div",{class:"fb bad",text:m}));
+      if(S.rc.tries[it.id]>=2) fb.appendChild(h("div",{class:"muted",style:"margin:6px 2px",text:"힌트: "+it.why}));
+    }
+  });
+  body.appendChild(h("p",{class:"muted",text:"1) 지문과 맞는 내용인가요?"})); body.appendChild(r1);
+  body.appendChild(h("p",{class:"muted",text:"2) 근거(또는 반대되는 내용)가 있는 문단은?"})); body.appendChild(r2);
+  body.appendChild(h("div",{class:"row",style:"margin-top:10px"},[go_])); body.appendChild(fb);
+}
+
+/* ============ Step 3: 문장 만들기 ============ */
+function renderS2(){
+  var i = S.s2.i, item = S2[i];
+  var total = S2.length;
+  var bar = h("div",{class:"prog"},[h("i")]);
+  bar.firstChild.style.width = Math.round(i/total*100)+"%";
+  $app.appendChild(h("div",{class:"card"},[
+    h("h2",{text:"Step 3. 문장 만들기"}),
+    h("p",{class:"muted",text:"뜻 덩어리를 눌러서 문장을 완성하세요. 아래 덩어리를 누르면 위로 올라가고, 위에 있는 덩어리를 다시 누르면 내려갑니다."}),
+    bar,
+    h("div",{id:"s2body"})
+  ]));
+  var body = document.getElementById("s2body");
+  if(item.type==="arrange") s2Arrange(body,item);
+  else if(item.type==="hook") s2Hook(body);
+  else s2Explain(body);
+}
+function s2Next(){ S.s2.i++; save(); if(S.s2.i>=S2.length) go(4); else render(); }
+function s2Arrange(body,item){
+  var data = ARR[item.id], correct = data.chunks.join(" ");
+  var tries = S.s2.tries[item.id]||0;
+  body.appendChild(h("div",{class:"prompt",text:item.label+(item.key?" ★":"")}));
+  if(item.key) body.appendChild(h("p",{class:"muted",text:"지문에도 나오는 문장이에요. (바로 앞에서 배운 규칙을 떠올려 보세요)"}));
+  var ans = h("div",{class:"tray answer",id:"ans"});
+  var pool = h("div",{class:"tray",id:"pool"});
+  var fb = h("div",{id:"fb"});
+  var btnCheck = h("button",{class:"btn",text:"확인",disabled:"disabled"});
+  var order = shuffle(data.chunks, 7+S.s2.i*13);
+  var chips = order.map(function(t){
+    var chip = h("button",{class:"chip",text:t});
+    chip.dataset.text = t; chip.dataset.where = "pool";
+    chip.addEventListener("click",function(){
+      if(locked) return;
+      chip.classList.remove("bad");
+      if(chip.dataset.where==="pool"){ chip.dataset.where="ans"; ans.appendChild(chip); }
+      else { chip.dataset.where="pool"; pool.appendChild(chip); }
+      fb.innerHTML=""; upd();
+    });
+    pool.appendChild(chip); return chip;
+  });
+  var locked = false;
+  function cur(){ return Array.prototype.map.call(ans.children,function(c){return c.dataset.text;}); }
+  function upd(){ if(cur().length===data.chunks.length) btnCheck.removeAttribute("disabled"); else btnCheck.setAttribute("disabled","disabled"); }
+  function finish(first){
+    locked = true;
+    btnCheck.classList.add("hidden");
+    if(S.s2.first[item.id]===undefined) S.s2.first[item.id] = first;
+    save();
+    fb.innerHTML="";
+    var box = h("div",{class:"fb ok",text:"정답! "+correct});
+    fb.appendChild(box);
+    fb.appendChild(h("div",{class:"row",style:"margin-top:10px"},[ h("button",{class:"btn ok",text:"다음",onclick:s2Next}) ]));
+  }
+  btnCheck.addEventListener("click",function(){
+    var got = cur();
+    S.s2.tries[item.id] = (S.s2.tries[item.id]||0)+1;
+    if(got.join(" ")===correct){ finish(S.s2.tries[item.id]===1); return; }
+    var firstWrong = -1;
+    got.forEach(function(t,idx){ if(t!==data.chunks[idx]){ ans.children[idx].classList.add("bad"); if(firstWrong<0) firstWrong=idx; } });
+    if(S.s2.first[item.id]===undefined) S.s2.first[item.id] = false;
+    save();
+    fb.innerHTML="";
+    fb.appendChild(h("div",{class:"fb bad",text:"아직 아니에요. 빨간 덩어리의 자리를 다시 생각해 보세요."}));
+    if(S.s2.tries[item.id]>=3){
+      fb.appendChild(h("div",{class:"row",style:"margin-top:8px"},[ h("button",{class:"btn ghost",text:"정답 보기",onclick:function(){
+        S.s2.gaveUp[item.id]=1; save();
+        data.chunks.forEach(function(t){ chips.forEach(function(c){ if(c.dataset.text===t){ c.dataset.where="ans"; c.classList.remove("bad"); ans.appendChild(c);} }); });
+        finish(false);
+      }}) ]));
+    }
+  });
+  body.appendChild(ans); body.appendChild(pool);
+  body.appendChild(h("div",{class:"row",style:"margin-top:10px"},[btnCheck]));
+  body.appendChild(fb);
+}
+function s2Hook(body){
+  body.appendChild(h("div",{class:"prompt",text:"잠깐, 퀴즈!"}));
+  body.appendChild(h("div",{class:"ex",text:"In such cases, the original creator has the right to request that the content ____ taken down."}));
+  body.appendChild(h("p",{text:"빈칸에 들어갈 말은? 지문을 다시 확인해도 좋아요."}));
+  var fb = h("div",{id:"fb"});
+  var box = h("div",{class:"choices"});
+  ["is","are","be","was"].forEach(function(w){
+    var b = h("button",{class:"btn ghost",text:w});
+    b.addEventListener("click",function(){
+      S.s2.hookTries++;
+      if(S.s2.hook===null) S.s2.hook = (w==="be");
+      save();
+      fb.innerHTML="";
+      if(w==="be"){
+        fb.appendChild(h("div",{class:"fb ok",text:"맞아요! 정답은 be예요. 그런데 왜 is가 아니라 be일까요? 다음 카드에서 알아봐요."}));
+        fb.appendChild(h("div",{class:"row",style:"margin-top:10px"},[ h("button",{class:"btn ok",text:"이유 알아보기",onclick:s2Next}) ]));
+        Array.prototype.forEach.call(box.children,function(x){ x.setAttribute("disabled","disabled"); });
+      } else {
+        fb.appendChild(h("div",{class:"fb bad",text:"지문 2번째 문단의 이 문장을 다시 찾아보세요. 정말 '"+w+"'였나요?"}));
+      }
+    });
+    box.appendChild(b);
+  });
+  body.appendChild(box); body.appendChild(fb);
+}
+function s2Explain(body){
+  body.appendChild(h("div",{class:"prompt",text:"규칙 카드: that절 안의 (should) + 동사원형"}));
+  var ex = h("div",{class:"explain"});
+  ex.innerHTML =
+    "<p><b>요청·요구·제안·권고</b>를 나타내는 동사 뒤의 that절에서는, 동사가 <b class='em'>(should) + 동사원형</b>이 됩니다.</p>"+
+    "<p>대표 동사: request, require, demand, suggest, recommend, insist, ask</p>"+
+    "<div class='ex'>… request that the content <b class='em'>(should) be</b> taken down.</div>"+
+    "<p>should는 보통 생략합니다. 그래서 is, are, was가 아니라 <b class='em'>be</b>만 남아요.</p>"+
+    "<p><b>세 가지만 기억하기</b></p>"+
+    "<p>① 주어가 3인칭 단수여도 -s를 붙이지 않아요. (that users <b class='em'>check</b>, checks 아님)</p>"+
+    "<p>② 시제가 과거여도 동사원형 그대로예요. (requested that the location <b class='em'>be</b> hidden)</p>"+
+    "<p>③ 수동이면 <b class='em'>(should) be + 과거분사</b> 모양이 됩니다. (be taken down, be deleted)</p>";
+  body.appendChild(ex);
+  body.appendChild(h("p",{class:"muted",text:"이제 이 규칙이 쓰인 비슷한 문장을 직접 만들어 봅시다. 먼저 지문 속 문장부터요."}));
+  body.appendChild(h("div",{class:"row"},[ h("button",{class:"btn",text:"문장 만들러 가기",onclick:s2Next}) ]));
+}
+
+/* ============ Step 3: 요약 ============ */
+function s3Analyze(t){
+  var s = t.toLowerCase();
+  var words = (s.match(/[a-z']+/g)||[]);
+  var a = /(copyright|permission|credit|copy|copied|original|source|ask)/.test(s);
+  var b = /(location|address|privacy|reveal|place|tag)/.test(s);
+  var hangul = /[가-힣]/.test(t);
+  return {n:words.length, a:a, b:b, hangul:hangul};
+}
+function renderS3(){
+  var card = h("div",{class:"card"},[
+    h("h2",{text:"Step 4. 한 문장으로 요약하기"}),
+    h("p",{text:"지문 전체를 영어 한 문장으로 요약해 보세요. 저작권(copyright)과 위치 정보(location)로 인한 사생활 문제를 모두 담아야 해요."}),
+    h("p",{class:"muted",text:"종이 지문을 다시 보면서 쓰세요. 아래 단어를 눌러 넣어도 됩니다. 지문 문장을 그대로 베끼기보다 내 말로 줄여 보세요."})
+  ]);
+  var ta = h("textarea",{id:"s3t",placeholder:"여기에 영어로 써 보세요.",spellcheck:"false",autocapitalize:"off",autocomplete:"off"});
+  ta.value = S.s3.text||"";
+  ta.addEventListener("input",function(){ S.s3.text = ta.value; save(); updBtn(); });
+  var bank = h("div",{class:"wordbank"});
+  WORDBANK.forEach(function(w){ bank.appendChild(h("button",{class:"wchip",text:w,onclick:function(){
+    var v = ta.value; ta.value = v + (v && !/\s$/.test(v)?" ":"") + w + " "; S.s3.text = ta.value; save(); updBtn(); ta.focus();
+  }})); });
+  var res = h("div",{id:"s3res"});
+  var btnCheck = h("button",{class:"btn ghost",text:"내 문장 점검하기"});
+  var btnNext = h("button",{class:"btn ok",text:"수업 마치기"});
+  function updBtn(){
+    var a = s3Analyze(ta.value);
+    if(a.n>=5) btnCheck.removeAttribute("disabled"); else btnCheck.setAttribute("disabled","disabled");
+    if(S.s3.checks>=1 && a.n>=5) btnNext.removeAttribute("disabled"); else btnNext.setAttribute("disabled","disabled");
+  }
+  btnCheck.addEventListener("click",function(){
+    var a = s3Analyze(ta.value);
+    S.s3.checks++; S.s3.lastText = ta.value; save();
+    res.innerHTML="";
+    var box = h("div",{class:"explain"});
+    function line(ok,txt){ box.appendChild(h("div",{class:"check"},[h("span",{class:"dot "+(ok?"y":"n"),text:ok?"✓":"!"}),h("span",{text:txt})])); }
+    if(a.hangul) line(false,"영어로 써야 해요. 한글이 섞여 있어요.");
+    line(a.a, a.a? "저작권 관련 내용이 들어 있어요" : "저작권(허락, 출처 표기 등) 이야기가 보이지 않아요");
+    line(a.b, a.b? "위치 정보(사생활) 관련 내용이 들어 있어요" : "위치 정보(주소 노출 등) 이야기가 보이지 않아요");
+    line(a.n>=8, a.n>=8? "문장 길이가 충분해요 ("+a.n+"단어)" : "조금 더 구체적으로 써 보세요 (지금 "+a.n+"단어)");
+    box.appendChild(h("div",{class:"ex"},[h("b",{text:"예시 문장 (정답은 하나가 아니에요) "}),document.createTextNode("Creators should ask for permission and give credit to the original work, and they should not reveal their exact location in videos.")]));
+    box.appendChild(h("p",{class:"muted",text:"이 점검은 핵심 단어가 있는지만 봐요. 문장이 문법적으로 맞는지는 선생님이 나중에 확인합니다. 고치고 싶으면 고친 뒤 다시 점검할 수 있어요."}));
+    res.appendChild(box);
+    updBtn();
+  });
+  btnNext.addEventListener("click",function(){ S.submitted = true; S.doneAt = Date.now(); save(); render(); window.scrollTo(0,0); });
+  card.appendChild(ta); card.appendChild(bank);
+  card.appendChild(h("div",{class:"row",style:"margin-top:8px"},[btnCheck,btnNext]));
+  card.appendChild(res);
+  $app.appendChild(card);
+  updBtn();
+}
+
+/* ============ 완료 화면 (교사 확인용) ============ */
+var clockTimer = null;
+function pad(n){ return n<10?"0"+n:""+n; }
+function nowStr(){ var d=new Date(); return d.getFullYear()+"."+pad(d.getMonth()+1)+"."+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds()); }
+var SVG_DONE = '<svg viewBox="0 0 320 240" width="100%" style="max-width:360px;display:block;margin:0 auto" role="img" aria-label="완료 축하 그림">'+
+ '<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd86b"/><stop offset="1" stop-color="#f0a93b"/></linearGradient></defs>'+
+ '<circle cx="160" cy="125" r="100" fill="#dcebfc"/>'+
+ '<g class="conf"><rect x="40" y="40" width="12" height="12" rx="2" fill="#f0a93b" transform="rotate(20 46 46)"/><rect x="262" y="52" width="12" height="12" rx="2" fill="#4a8fe7" transform="rotate(-25 268 58)"/><circle cx="70" cy="150" r="7" fill="#d9534f"/><circle cx="256" cy="150" r="7" fill="#2e9d62"/><rect x="92" y="22" width="10" height="10" rx="2" fill="#2e9d62" transform="rotate(35 97 27)"/><rect x="226" y="24" width="10" height="10" rx="2" fill="#d9534f" transform="rotate(-15 231 29)"/><circle cx="46" cy="96" r="5" fill="#4a8fe7"/><circle cx="282" cy="104" r="5" fill="#f0a93b"/></g>'+
+ '<path d="M110 58h100v50c0 28-22 50-50 50s-50-22-50-50z" fill="url(#g1)" stroke="#d98d1c" stroke-width="4"/>'+
+ '<path d="M110 70H84c0 24 12 40 32 44M210 70h26c0 24-12 40-32 44" fill="none" stroke="#d98d1c" stroke-width="6" stroke-linecap="round"/>'+
+ '<rect x="148" y="156" width="24" height="26" fill="#d98d1c"/><rect x="122" y="180" width="76" height="16" rx="6" fill="#4a8fe7"/>'+
+ '<circle cx="160" cy="104" r="30" fill="#fff"/><path d="M144 104l11 12 22-24" fill="none" stroke="#2e9d62" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'+
+ '</svg>';
+function renderDone(){
+  var mins = Math.max(1, Math.round((S.sec[1]+S.sec[2]+S.sec[3]+S.sec[4])/60));
+  var svgBox = h("div"); svgBox.innerHTML = SVG_DONE;
+  var clock = h("div",{class:"clock",id:"clock",text:nowStr()});
+  $app.appendChild(h("div",{class:"card",style:"text-align:center"},[
+    svgBox,
+    h("h2",{style:"font-size:26px;margin:10px 0 4px",text:"오늘 수업의 모든 과정을 완료했습니다. 수고하셨습니다!"}),
+    h("p",{class:"muted",text:"이 화면을 선생님께 보여 주세요. (걸린 시간 약 "+mins+"분)"}),
+    clock,
+    h("div",{class:"explain",style:"text-align:left"},[h("div",{class:"muted",text:"내가 쓴 요약"}),h("div",{text:S.s3.text||""})]),
+    h("div",{class:"muted",style:"margin-top:10px"},[h("a",{href:"#",style:"color:#9aa8bd",text:"처음으로 (교사용)",onclick:function(ev){ ev.preventDefault(); if(confirm("이 태블릿의 기록을 지우고 처음 화면으로 돌아갑니다.")){ S=freshState(); save(); render(); } }})])
+  ]));
+  if(clockTimer) clearInterval(clockTimer);
+  clockTimer = setInterval(function(){ var c=document.getElementById("clock"); if(c) c.textContent = nowStr(); else { clearInterval(clockTimer); clockTimer=null; } },1000);
+}
+render();
+</script>
+</body>
+</html>
