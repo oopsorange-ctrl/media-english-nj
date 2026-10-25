@@ -114,7 +114,7 @@ export const cards: LinkCard[] = [
     href: "https://media-english-nj.vercel.app/golden_bell_firebase.html",
     thumb: { kind: "icon", icon: "bell" }
   },
-  {
+{
     kind: "group",
     id: "arcade",
     number: "07",
@@ -129,5 +129,14 @@ export const cards: LinkCard[] = [
         thumb: { kind: "icon", icon: "game" }
       }
     ]
+  },
+  {
+    kind: "link",
+    id: "lesson6-ethics-reading",
+    number: "08",
+    name: "Lesson 6 읽기 스터디",
+    description: "디지털 윤리 지문 혼자 공부하기",
+    href: "https://media-english-nj.vercel.app/lesson6_ethics_reading.html",
+    thumb: { kind: "icon", icon: "docs" }
   }
 ];
