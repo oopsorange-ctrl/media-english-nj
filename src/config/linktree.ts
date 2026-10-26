@@ -87,7 +87,7 @@ export const cards: LinkCard[] = [
     href: "https://claude.ai/public/artifacts/7cd89759-cdf6-42f1-bfa3-1b4081f9d613",
     thumb: { kind: "icon", icon: "game" }
   },
-  {
+   {
     kind: "link",
     id: "textbook-pdf",
     number: "04",
@@ -98,8 +98,17 @@ export const cards: LinkCard[] = [
   },
   {
     kind: "link",
-    id: "attendance-system",
+    id: "ethics-camera-action",
     number: "05",
+    name: "Ethics, Camera, Action!",
+    description: "2차 수행평가 안내 자료 (PDF)",
+    href: "https://media-english-nj.vercel.app/Ethics_Camera_Action.pdf",
+    thumb: { kind: "icon", icon: "download" }
+  },
+  {
+    kind: "link",
+    id: "attendance-system",
+    number: "06",
     name: "출석 시스템",
     description: "이동수업 반별 출석 체크",
     href: "https://claude.ai/public/artifacts/8c0140e6-949c-4b52-857b-ce0aeb796afe",
@@ -108,16 +117,16 @@ export const cards: LinkCard[] = [
   {
     kind: "link",
     id: "golden-bell",
-    number: "06",
+    number: "07",
     name: "도전 골든벨",
     description: "챕터 복습 골든벨 게임",
     href: "https://media-english-nj.vercel.app/golden_bell_firebase.html",
     thumb: { kind: "icon", icon: "bell" }
   },
-{
+  {
     kind: "group",
     id: "arcade",
-    number: "07",
+    number: "08",
     name: "오락실",
     description: "nj가 만든 미니게임 모음",
     thumb: { kind: "icon", icon: "game" },
@@ -133,7 +142,7 @@ export const cards: LinkCard[] = [
   {
     kind: "link",
     id: "lesson6-ethics-reading",
-    number: "08",
+    number: "09",
     name: "Lesson 6 읽기 스터디",
     description: "디지털 윤리 지문 혼자 공부하기",
     href: "https://media-english-nj.vercel.app/lesson6_ethics_reading.html",
