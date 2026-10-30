@@ -96,14 +96,27 @@ export const cards: LinkCard[] = [
     href: "https://drive.google.com/drive/u/1/folders/15yDwaJFyu7kiO1TO27aoFz2m1kfuVaLN",
     thumb: { kind: "icon", icon: "manual" }
   },
-  {
-    kind: "link",
+   {
+    kind: "group",
     id: "ethics-camera-action",
     number: "05",
     name: "Ethics, Camera, Action!",
-    description: "2차 수행평가 안내 자료 (PDF)",
-    href: "https://media-english-nj.vercel.app/Ethics_Camera_Action.pdf",
-    thumb: { kind: "icon", icon: "download" }
+    description: "2차 수행평가 안내 자료 및 제출",
+    thumb: { kind: "icon", icon: "download" },
+    items: [
+      {
+        name: "안내 자료 (PDF)",
+        description: "2차 수행평가 안내 자료",
+        href: "https://media-english-nj.vercel.app/Ethics_Camera_Action.pdf",
+        thumb: { kind: "icon", icon: "download" }
+      },
+      {
+        name: "수행평가 제출",
+        description: "구글 폼으로 수행평가 제출하기",
+        href: "https://forms.gle/JnJw8GL7JMEvMEi36",
+        thumb: { kind: "icon", icon: "docs" }
+      }
+    ]
   },
   {
     kind: "link",
